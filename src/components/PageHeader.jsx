@@ -1,20 +1,29 @@
+import { FaAngleRight } from "react-icons/fa";
+
 export default function PageHeader({ title, breadcrumb, children }) {
   const renderBreadcrumb = () => {
     if (!breadcrumb) return null;
 
     if (typeof breadcrumb === "string") {
       return (
-        <span className="text-sm text-gray-500">{breadcrumb}</span>
+        <div className="flex items-center text-sm text-gray-500 gap-2 mt-1">
+          <span>{breadcrumb}</span>
+        </div>
       );
     }
 
     if (Array.isArray(breadcrumb)) {
       return (
-        <nav className="flex text-sm text-gray-500 space-x-1" aria-label="Breadcrumb">
+        <nav
+          className="flex items-center text-sm text-gray-500 gap-1 mt-1"
+          aria-label="Breadcrumb"
+        >
           {breadcrumb.map((item, index) => (
-            <div key={index} className="flex items-center space-x-1">
-              {index !== 0 && <span>/</span>}
-              <span className="hover:text-gray-700 transition-colors duration-150">{item}</span>
+            <div key={index} className="flex items-center gap-1">
+              {index > 0 && <FaAngleRight className="text-gray-400" />}
+              <span className="hover:text-indigo-600 transition-colors cursor-pointer">
+                {item}
+              </span>
             </div>
           ))}
         </nav>
@@ -25,19 +34,14 @@ export default function PageHeader({ title, breadcrumb, children }) {
   };
 
   return (
-    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-6 py-4 mb-6 bg-white shadow rounded-2xl border border-gray-100">
-      {/* Left: Title & Breadcrumb */}
+    <section className="bg-gradient-to-tr from-indigo-50 to-white px-6 py-4 rounded-2xl shadow-sm">
       <div>
-        <h1 className="text-2xl font-extrabold text-gray-800 tracking-tight">{title}</h1>
-        <div className="mt-1">{renderBreadcrumb()}</div>
+        <h1 className="text-2xl font-bold text-indigo-700">{title}</h1>
+        {renderBreadcrumb()}
+        {children && (
+          <div className="mt-3 flex flex-wrap gap-2">{children}</div>
+        )}
       </div>
-
-      {/* Right: Action Buttons (if any) */}
-      {children && (
-        <div className="flex flex-wrap items-center gap-2">
-          {children}
-        </div>
-      )}
-    </div>
+    </section>
   );
 }
