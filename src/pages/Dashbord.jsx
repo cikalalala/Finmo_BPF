@@ -2,7 +2,7 @@ import {
   FaMoneyBillWave,
   FaWallet,
   FaArrowUp,
-  FaArrowDown
+  FaArrowDown,
 } from "react-icons/fa";
 import PageHeader from "../components/PageHeader";
 import {
@@ -16,19 +16,42 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend
+  Legend,
 } from "recharts";
 
 import statisticData from "../data/statistik.json";
 import distribusiData from "../data/distribusi.json";
+import { useNavigate } from "react-router-dom"; // tambahin ini di paling atas
+import { Outlet } from "react-router-dom";
 
 const COLORS = ["#8e44ad", "#f1c40f"];
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+
   return (
     <div className="px-5 py-6 space-y-6">
       <PageHeader title="Hi, Kelompok 6">
-        <button className="btn btn-primary">+ Tambah Catatan</button>
+        <div className="grid grid-cols-3 gap-2 w-full">
+          <button
+            className="btn btn-primary w-full"
+            onClick={() => navigate("/main/Dashboard/pemasukan")}
+          >
+            + Pemasukan
+          </button>
+          <button
+            className="btn btn-primary w-full"
+            onClick={() => navigate("/main/Dashboard/pengeluaran")}
+          >
+            - Pengeluaran
+          </button>
+          <button
+            className="btn btn-primary w-full"
+            onClick={() => navigate("/main/Dashboard/budgeting")}
+          >
+            = Budgeting
+          </button>
+        </div>
       </PageHeader>
 
       {/* Ringkasan Keuangan */}
@@ -91,13 +114,17 @@ export default function Dashboard() {
         {/* Statistik Keuangan Bulanan */}
         <div className="card bg-base-100 shadow-md md:col-span-2">
           <div className="card-body">
-            <h2 className="card-title text-green-700">Statistik Keuangan Bulanan</h2>
+            <h2 className="card-title text-green-700">
+              Statistik Keuangan Bulanan
+            </h2>
             <ResponsiveContainer width="100%" height={250}>
               <LineChart data={statisticData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
-                <Tooltip formatter={(value) => `Rp ${value.toLocaleString()}`} />
+                <Tooltip
+                  formatter={(value) => `Rp ${value.toLocaleString()}`}
+                />
                 <Legend />
                 <Line
                   type="monotone"
@@ -140,13 +167,16 @@ export default function Dashboard() {
                     />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => `Rp ${value.toLocaleString()}`} />
+                <Tooltip
+                  formatter={(value) => `Rp ${value.toLocaleString()}`}
+                />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
           </div>
         </div>
       </div>
+      <Outlet />
     </div>
   );
 }
