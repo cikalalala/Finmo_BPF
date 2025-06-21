@@ -1,8 +1,44 @@
 [
-  { "name": "Jan", "Pemasukan": 2500000, "Pengeluaran": 1200000 },
-  { "name": "Feb", "Pemasukan": 2000000, "Pengeluaran": 1000000 },
-  { "name": "Mar", "Pemasukan": 2700000, "Pengeluaran": 1500000 },
-  { "name": "Apr", "Pemasukan": 3000000, "Pengeluaran": 1800000 },
-  { "name": "May", "Pemasukan": 2200000, "Pengeluaran": 1400000 },
-  { "name": "Jun", "Pemasukan": 2800000, "Pengeluaran": 1300000 }
+  {
+    "name": "Jan",
+    "Pemasukan": 2500000,
+    "Pengeluaran": 1200000,
+    "deskripsi": "Gaji bulanan dan pengeluaran rutin",
+    "tanggal": "2025-01-31"
+  },
+  {
+    "name": "Feb",
+    "Pemasukan": 2000000,
+    "Pengeluaran": 1000000,
+    "deskripsi": "Gaji freelance dan kebutuhan pokok",
+    "tanggal": "2025-02-28"
+  },
+  {
+    "name": "Mar",
+    "Pemasukan": 2700000,
+    "Pengeluaran": 1500000,
+    "deskripsi": "Pemasukan tambahan dari proyek dan belanja bulanan",
+    "tanggal": "2025-03-31"
+  },
+  {
+    "name": "Apr",
+    "Pemasukan": 3000000,
+    "Pengeluaran": 1800000,
+    "deskripsi": "Bonus kerja dan pengeluaran rumah tangga",
+    "tanggal": "2025-04-30"
+  },
+  {
+    "name": "May",
+    "Pemasukan": 2200000,
+    "Pengeluaran": 1400000,
+    "deskripsi": "Pemasukan dari jualan dan kebutuhan lebaran",
+    "tanggal": "2025-05-31"
+  },
+  {
+    "name": "Jun",
+    "Pemasukan": 2800000,
+    "Pengeluaran": 1300000,
+    "deskripsi": "Uang THR dan pengeluaran liburan",
+    "tanggal": "2025-06-30"
+  }
 ]
