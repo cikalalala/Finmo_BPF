@@ -1,44 +1,55 @@
 import "./assets/tailwind.css";
 import { Route, Routes } from "react-router-dom";
-import React from "react";
-import { Suspense } from "react";
+import React, { Suspense } from "react";
 
+// Lazy import layouts
 const AuthLayout = React.lazy(() => import("./layouts/AuthLayout"));
+const GuestLayout = React.lazy(() => import("./layouts/GuestLayout"));
+const MainLayout = React.lazy(() => import("./layouts/MainLayout"));
 
+// Lazy import pages
 const Login = React.lazy(() => import("./pages/auth/Login"));
 const Register = React.lazy(() => import("./pages/auth/Register"));
 const Forgot = React.lazy(() => import("./pages/auth/Forgot"));
-
-const GuestLayout = React.lazy(() => import("./layouts/GuestLayout"));
-
-const MainLayout = React.lazy(() => import("./layouts/MainLayout"));
 const Dashboard = React.lazy(() => import("./pages/Dashbord"));
 const Laporan = React.lazy(() => import("./pages/Laporan"));
 const Pemasukan = React.lazy(() => import("./pages/Pemasukan"));
 const Pengeluaran = React.lazy(() => import("./pages/Pengeluaran"));
 const Budgeting = React.lazy(() => import("./pages/Budgeting"));
 
+// Lazy import components
+const HeroSection = React.lazy(() => import("./components/HeroSection"));
 const Loading = React.lazy(() => import("./components/Loading"));
 
 export default function App() {
   return (
     <Suspense fallback={<Loading />}>
       <Routes>
+        {/* Main layout untuk halaman setelah login */}
         <Route path="/main" element={<MainLayout />}>
           <Route path="/main/Dashboard" element={<Dashboard />} />
           <Route path="/main/Laporan" element={<Laporan />} />
-
           <Route path="/main/Dashboard/Pemasukan" element={<Pemasukan />} />
           <Route path="/main/Dashboard/Pengeluaran" element={<Pengeluaran />} />
           <Route path="/main/Dashboard/Budgeting" element={<Budgeting />} />
         </Route>
 
+        {/* Auth layout untuk halaman login/register/forgot */}
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot" element={<Forgot />} />
         </Route>
 
+        {/* Guest layout untuk homepage "/" */}
+        <Route
+          path="/"
+          element={
+            <GuestLayout>
+              <HeroSection />
+            </GuestLayout>
+          }
+        />
       </Routes>
     </Suspense>
   );
