@@ -1,7 +1,6 @@
-// src/pages/Budgeting.jsx
-
 import { useEffect, useState } from "react";
 import { AlertTriangle, Wallet, CalendarCheck, RotateCcw } from "lucide-react";
+import supabase from "../lib/supabase";
 
 export default function Budgeting() {
   const [budget, setBudget] = useState("");
@@ -10,56 +9,87 @@ export default function Budgeting() {
   const [canReset, setCanReset] = useState(false);
   const [sisaHari, setSisaHari] = useState(null);
   const [warning, setWarning] = useState("");
-  const [pengeluaranHariIni, setPengeluaranHariIni] = useState(0);
+  const [budgetData, setBudgetData] = useState(null);
 
   useEffect(() => {
-    const budgeting = JSON.parse(localStorage.getItem("budgetingData"));
+    const fetchBudget = async () => {
+      const { data, error } = await supabase
+        .from("budgeting")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
 
-    if (budgeting) {
-      const start = new Date(budgeting.startDate);
-      const now = new Date();
-      const selisihHari = Math.floor((now - start) / (1000 * 60 * 60 * 24));
-
-      if (selisihHari < budgeting.duration) {
-        setCanReset(true);
-        setSisaHari(budgeting.duration - selisihHari);
-
-        const dummyHariIni = 200000; // dummy
-        setPengeluaranHariIni(dummyHariIni);
-
-        const batasHarian = budgeting.budget / budgeting.duration;
-        if (dummyHariIni > batasHarian * 0.5) {
-          setWarning("⚠️ Pengeluaran hari ini melebihi 50% dari batas harian.");
-        } else {
-          setWarning("");
-        }
-      } else {
-        setCanReset(false);
-        setSisaHari(0);
+      if (error) {
+        console.error("Gagal ambil budgeting:", error);
+        return;
       }
-    }
+
+      if (data) {
+        setBudgetData(data);
+        const start = new Date(data.start_date);
+        const now = new Date();
+        const selisihHari = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+
+        if (selisihHari < data.duration) {
+          setCanReset(true);
+          setSisaHari(data.duration - selisihHari);
+
+          const pengeluaranHariIni = 200000; // dummy dulu
+          const batasHarian = data.budget / data.duration;
+          if (pengeluaranHariIni > batasHarian * 0.5) {
+            setWarning("⚠️ Pengeluaran hari ini melebihi 50% dari batas harian.");
+          } else {
+            setWarning("");
+          }
+        } else {
+          setCanReset(false);
+          setSisaHari(0);
+        }
+      }
+    };
+
+    fetchBudget();
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const durasiFix =
       duration === "custom" ? parseInt(customDuration) : parseInt(duration);
 
-    const dataToSave = {
-      budget: parseInt(budget),
-      duration: durasiFix,
-      startDate: new Date().toISOString(),
-    };
+    const { error } = await supabase.from("budgeting").insert([
+      {
+        budget: parseInt(budget),
+        duration: durasiFix,
+        start_date: new Date().toISOString(),
+      },
+    ]);
 
-    localStorage.setItem("budgetingData", JSON.stringify(dataToSave));
+    if (error) {
+      alert("❌ Gagal menyimpan budget.");
+      console.error(error);
+      return;
+    }
+
     alert("✅ Budget berhasil disimpan!");
     window.location.reload();
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
     if (confirm("Yakin ingin mereset budgeting sekarang?")) {
-      localStorage.removeItem("budgetingData");
+      if (!budgetData?.id) return;
+      const { error } = await supabase
+        .from("budgeting")
+        .delete()
+        .eq("id", budgetData.id);
+
+      if (error) {
+        alert("❌ Gagal reset budget.");
+        console.error(error);
+        return;
+      }
+
       alert("🔄 Budget berhasil di-reset!");
       window.location.reload();
     }

@@ -9,12 +9,12 @@ export default function GuestLayout({ children }) {
         </div>
         <nav className="space-x-6 text-sm">
           <Link to="/">Home</Link>
-          <Link to="/pages/guest/about">About</Link>
-          <Link to="/pages/guest/OurTim">Our Team</Link>
-          <Link to="/pages/guest/FAQpage">FAQ Page</Link>
-          <Link to="/pages/guest/Contact">Contact</Link>
-          <Link to="/pages/guest/CustomerRivew">Customer Rivew</Link>
-          <Link to="/login">
+          <Link to="/About">About</Link>
+          <Link to="/OurTim">Our Team</Link>
+          <Link to="/FAQpage">FAQ Page</Link>
+          <Link to="/Contact">Contact</Link>
+          <Link to="/CustomerRivew">Customer Rivew</Link>
+          <Link to="/Login">
             <button className="btn btn-outline btn-sm rounded-full text-white border-white hover:bg-white hover:text-black">
               Login
             </button>
