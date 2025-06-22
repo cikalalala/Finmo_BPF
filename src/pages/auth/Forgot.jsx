@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { supabase } from "../../../supabaseClient";
+import { supabase } from "../../assets/supabaseClient";
 
 export default function Forgot() {
   const [email, setEmail] = useState("");
