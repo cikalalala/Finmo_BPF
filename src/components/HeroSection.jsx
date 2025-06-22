@@ -1,4 +1,5 @@
 
+
 export default function HeroSection() {
   return (
     <section className="flex flex-col lg:flex-row items-center justify-between px-8 py-12 max-w-7xl mx-auto">
@@ -6,7 +7,7 @@ export default function HeroSection() {
         <h1 className="text-4xl lg:text-5xl font-bold">
           Atur <span className="text-green-500">Keuanganmu</span>, Capai Impianmu
         </h1>
-        <p className="text-white/90">
+        <p className="text-white/90 text-lg leading-relaxed max-w-md">
           Website manajemen keuangan yang dirancang khusus untuk mahasiswa. Catat pengeluaran, kelola pemasukan,
           dan capai target tabungan dengan mudah dan teratur.
         </p>
@@ -15,11 +16,11 @@ export default function HeroSection() {
           <button className="btn btn-outline text-white border-white">Services</button>
         </div>
       </div>
-      <div className="lg:w-1/2 mt-10 lg:mt-0">
+      <div className="lg:w-2/5 mt-20 lg:mt-50">
         <img
-          src="https://png.pngtree.com/png-clipart/20190905/original/pngtree-flat-wind-h5-financial-bank-financial-stock-market-png-image_4520625.jpg"
+          src="https://ppid.pta-pontianak.go.id/Animasi/Pedoman%20Keuangan.png"
           alt="Keuangan Illustration"
-          className="w-full max-w-lg mx-auto"
+          className="w-full max-w-lg mx-auto transform scale-160 transition duration-300"
         />
       </div>
     </section>

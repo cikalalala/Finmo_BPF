@@ -16,6 +16,11 @@ const Laporan = React.lazy(() => import("./pages/Laporan"));
 const Pemasukan = React.lazy(() => import("./pages/Pemasukan"));
 const Pengeluaran = React.lazy(() => import("./pages/Pengeluaran"));
 const Budgeting = React.lazy(() => import("./pages/Budgeting"));
+const About = React.lazy(() => import("./pages/Guest/about"));
+const OurTim = React.lazy(() => import("./pages/guest/OurTim"));
+const FAQpage = React.lazy(() => import("./pages/guest/FAQpage"));
+const Contact = React.lazy(() => import("./pages/guest/Contact"));
+const CustomerRivew = React.lazy(() => import("./pages/guest/CustomerReview"));
 
 // Lazy import components
 const HeroSection = React.lazy(() => import("./components/HeroSection"));
@@ -41,15 +46,15 @@ export default function App() {
           <Route path="/forgot" element={<Forgot />} />
         </Route>
 
-        {/* Guest layout untuk homepage "/" */}
-        <Route
-          path="/"
-          element={
-            <GuestLayout>
-              <HeroSection />
-            </GuestLayout>
-          }
-        />
+        {/* Guest layout untuk halaman home, about, team, FAQ, contact, rivew */}
+        <Route element={<GuestLayout />}>
+          <Route path="/" element={<HeroSection />} />
+          <Route path="/pages/guest/about" element={<About />} />
+          <Route path="/pages/guest/OurTim" element={<OurTim />} />
+          <Route path="/pages/guest/FAQpage" element={<FAQpage />} />
+          <Route path="/pages/guest/Contact" element={<Contact />} />
+          <Route path="/pages/guest/CustomerRivew" element={<CustomerRivew />} />
+        </Route>
       </Routes>
     </Suspense>
   );
