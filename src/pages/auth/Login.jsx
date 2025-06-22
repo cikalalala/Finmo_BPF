@@ -38,7 +38,8 @@ export default function Login() {
     }
 
     localStorage.setItem("user", JSON.stringify(userData));
-    navigate("/main");
+    navigate("/main/Dashboard");
+
   };
 
   return (

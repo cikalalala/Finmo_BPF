@@ -16,6 +16,7 @@ const Laporan = React.lazy(() => import("./pages/Laporan"));
 const Pemasukan = React.lazy(() => import("./pages/Pemasukan"));
 const Pengeluaran = React.lazy(() => import("./pages/Pengeluaran"));
 const Budgeting = React.lazy(() => import("./pages/Budgeting"));
+const Total = React.lazy(() => import("./pages/Total"));
 const About = React.lazy(() => import("./pages/Guest/about"));
 const OurTim = React.lazy(() => import("./pages/guest/OurTim"));
 const FAQpage = React.lazy(() => import("./pages/guest/FAQpage"));
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="/main/Dashboard/Pemasukan" element={<Pemasukan />} />
           <Route path="/main/Dashboard/Pengeluaran" element={<Pengeluaran />} />
           <Route path="/main/Dashboard/Budgeting" element={<Budgeting />} />
+          <Route path="/main/Dashboard/Total" element={<Total />} />
         </Route>
 
         {/* Auth layout untuk halaman login/register/forgot */}

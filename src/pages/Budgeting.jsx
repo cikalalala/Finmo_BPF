@@ -1,100 +1,153 @@
 // src/pages/Budgeting.jsx
+
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "../assets/supabaseClient";
+import { AlertTriangle, Wallet, CalendarCheck, RotateCcw } from "lucide-react";
 
 export default function Budgeting() {
-  const [totalMasuk, setTotalMasuk] = useState(0);
-  const [totalKeluar, setTotalKeluar] = useState(0);
-  const [selisih, setSelisih] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [budget, setBudget] = useState("");
+  const [duration, setDuration] = useState("7");
+  const [customDuration, setCustomDuration] = useState("");
+  const [canReset, setCanReset] = useState(false);
+  const [sisaHari, setSisaHari] = useState(null);
+  const [warning, setWarning] = useState("");
+  const [pengeluaranHariIni, setPengeluaranHariIni] = useState(0);
 
   useEffect(() => {
-    const fetchBudgetData = async () => {
-      const { data: authData, error: authError } = await supabase.auth.getUser();
+    const budgeting = JSON.parse(localStorage.getItem("budgetingData"));
 
-      if (authError || !authData?.user?.email) {
-        navigate("/login");
-        return;
+    if (budgeting) {
+      const start = new Date(budgeting.startDate);
+      const now = new Date();
+      const selisihHari = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+
+      if (selisihHari < budgeting.duration) {
+        setCanReset(true);
+        setSisaHari(budgeting.duration - selisihHari);
+
+        const dummyHariIni = 200000; // dummy
+        setPengeluaranHariIni(dummyHariIni);
+
+        const batasHarian = budgeting.budget / budgeting.duration;
+        if (dummyHariIni > batasHarian * 0.5) {
+          setWarning("⚠️ Pengeluaran hari ini melebihi 50% dari batas harian.");
+        } else {
+          setWarning("");
+        }
+      } else {
+        setCanReset(false);
+        setSisaHari(0);
       }
+    }
+  }, []);
 
-      // Cari user ID di tabel users berdasarkan email
-      const { data: userRow, error: userError } = await supabase
-        .from("users")
-        .select("id")
-        .eq("email", authData.user.email)
-        .single();
+  const handleSubmit = (e) => {
+    e.preventDefault();
 
-      if (userError || !userRow) {
-        console.error("Gagal menemukan pengguna:", userError);
-        navigate("/login");
-        return;
-      }
+    const durasiFix =
+      duration === "custom" ? parseInt(customDuration) : parseInt(duration);
 
-      const userId = userRow.id;
-
-      // Ambil semua pemasukan user
-      const { data: pemasukanData, error: pemasukanError } = await supabase
-        .from("pemasukan")
-        .select("jumlah")
-        .eq("id_pengguna", userId);
-
-      // Ambil semua pengeluaran user
-      const { data: pengeluaranData, error: pengeluaranError } = await supabase
-        .from("pengeluaran")
-        .select("jumlah")
-        .eq("id_pengguna", userId);
-
-      if (pemasukanError || pengeluaranError) {
-        console.error("Gagal mengambil data:", pemasukanError || pengeluaranError);
-        setLoading(false);
-        return;
-      }
-
-      const totalPemasukan = pemasukanData?.reduce((sum, item) => sum + Number(item.jumlah), 0) || 0;
-      const totalPengeluaran = pengeluaranData?.reduce((sum, item) => sum + Number(item.jumlah), 0) || 0;
-
-      setTotalMasuk(totalPemasukan);
-      setTotalKeluar(totalPengeluaran);
-      setSelisih(totalPemasukan - totalPengeluaran);
-      setLoading(false);
+    const dataToSave = {
+      budget: parseInt(budget),
+      duration: durasiFix,
+      startDate: new Date().toISOString(),
     };
 
-    fetchBudgetData();
-  }, [navigate]);
+    localStorage.setItem("budgetingData", JSON.stringify(dataToSave));
+    alert("✅ Budget berhasil disimpan!");
+    window.location.reload();
+  };
+
+  const handleReset = () => {
+    if (confirm("Yakin ingin mereset budgeting sekarang?")) {
+      localStorage.removeItem("budgetingData");
+      alert("🔄 Budget berhasil di-reset!");
+      window.location.reload();
+    }
+  };
 
   return (
-    <div className="p-6 max-w-2xl mx-auto bg-white rounded-xl shadow-lg mt-6 space-y-6">
-      <h1 className="text-2xl font-bold text-yellow-700 text-center">Halaman Budgeting</h1>
-      <p className="mt-2 text-gray-600 text-center">
-        Di sini kamu bisa cek total pemasukan, pengeluaran, dan sisa anggaran.
-      </p>
+    <div className="max-w-2xl mx-auto bg-white p-6 rounded-2xl shadow-md mt-10 space-y-6">
+      <h2 className="text-3xl font-bold flex items-center gap-2">
+        <Wallet className="w-7 h-7 text-blue-600" />
+        Atur Budget
+      </h2>
 
-      {loading ? (
-        <p className="text-center text-gray-400">Memuat data...</p>
-      ) : (
-        <div className="text-lg space-y-3 mt-4">
-          <div className="flex justify-between">
-            <span>Total Pemasukan:</span>
-            <span className="font-semibold text-green-600">
-              Rp {totalMasuk.toLocaleString()}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span>Total Pengeluaran:</span>
-            <span className="font-semibold text-red-600">
-              Rp {totalKeluar.toLocaleString()}
-            </span>
-          </div>
-          <hr className="my-2" />
-          <div className="flex justify-between text-xl font-bold">
-            <span>Sisa Anggaran:</span>
-            <span className={selisih >= 0 ? "text-green-700" : "text-red-700"}>
-              Rp {selisih.toLocaleString()}
-            </span>
-          </div>
+      {sisaHari !== null && (
+        <div className="flex items-center gap-2 text-gray-700 text-sm bg-gray-100 p-3 rounded-lg">
+          <CalendarCheck className="w-5 h-5 text-green-600" />
+          <span>
+            <strong>Budget aktif:</strong> masih berlaku selama {sisaHari} hari lagi.
+          </span>
         </div>
+      )}
+
+      {warning && (
+        <div className="flex items-center gap-2 bg-yellow-100 text-yellow-800 p-3 rounded-md text-sm">
+          <AlertTriangle className="w-5 h-5" />
+          {warning}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Jumlah Budget (Rp)
+          </label>
+          <input
+            type="number"
+            value={budget}
+            onChange={(e) => setBudget(e.target.value)}
+            required
+            className="input input-bordered w-full"
+            placeholder="Contoh: 1000000"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Durasi</label>
+          <select
+            value={duration}
+            onChange={(e) => setDuration(e.target.value)}
+            className="select select-bordered w-full"
+          >
+            <option value="7">7 Hari</option>
+            <option value="14">14 Hari</option>
+            <option value="30">30 Hari</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+
+        {duration === "custom" && (
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Durasi Custom (hari)
+            </label>
+            <input
+              type="number"
+              value={customDuration}
+              onChange={(e) => setCustomDuration(e.target.value)}
+              min="1"
+              required
+              className="input input-bordered w-full"
+              placeholder="Contoh: 10"
+            />
+          </div>
+        )}
+
+        <button type="submit" className="btn btn-primary w-full">
+          Simpan Budget
+        </button>
+      </form>
+
+      {canReset && (
+        <button
+          type="button"
+          onClick={handleReset}
+          className="btn btn-outline btn-error w-full flex items-center justify-center gap-2"
+        >
+          <RotateCcw className="w-5 h-5" />
+          Reset Budget
+        </button>
       )}
     </div>
   );
