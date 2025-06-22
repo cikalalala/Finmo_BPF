@@ -1,10 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../assets/supabaseClient";
-
+import { Link } from "react-router-dom";
 
 export default function Register() {
-  const [formData, setFormData] = useState({ name: "", email: "", password: "" });
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -38,7 +42,10 @@ export default function Register() {
     ]);
 
     if (dbError) {
-      setError("Pendaftaran berhasil, tapi gagal menyimpan ke database: " + dbError.message);
+      setError(
+        "Pendaftaran berhasil, tapi gagal menyimpan ke database: " +
+          dbError.message
+      );
       return;
     }
 
@@ -47,7 +54,10 @@ export default function Register() {
   };
 
   return (
-    <form onSubmit={handleRegister} className="max-w-sm mx-auto p-4 bg-white rounded shadow">
+    <form
+      onSubmit={handleRegister}
+      className="max-w-sm mx-auto p-4 bg-white rounded shadow"
+    >
       <h2 className="text-xl font-bold mb-4">Register</h2>
       {error && <div className="text-red-600 mb-2">{error}</div>}
 
@@ -75,7 +85,14 @@ export default function Register() {
         onChange={handleChange}
         className="input input-bordered w-full mb-3"
       />
-      <button type="submit" className="btn btn-primary w-full">Register</button>
+      <button type="submit" className="btn btn-primary w-full">
+        Register
+      </button>
+      <div className="flex justify-end mt-4 text-sm">
+        <Link to="/login" className="hover:underline text-blue-600">
+          Sudah punya Akun?
+        </Link>
+      </div>
     </form>
   );
 }
