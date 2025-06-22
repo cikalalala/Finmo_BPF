@@ -18,176 +18,142 @@ import {
   Cell,
   Legend,
 } from "recharts";
-
 import { useNavigate, Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
-
-import statisticData from "../data/statistik.json";
-import distribusiData from "../data/distribusi.json";
+import { supabase } from "../assets/supabaseClient";
 
 const COLORS = ["#8e44ad", "#f1c40f"];
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [userName, setUserName] = useState("Pengguna");
+  const [pemasukan, setPemasukan] = useState([]);
+  const [pengeluaran, setPengeluaran] = useState([]);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
+    const fetchUserAndData = async () => {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
 
-    if (!storedUser) {
-      navigate("/login");
-    } else {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUserName(parsedUser.name || "Pengguna");
-      } catch (err) {
-        console.error("Failed to parse user:", err);
+      if (authError || !authData?.user?.email) {
         navigate("/login");
+        return;
       }
-    }
-  }, [navigate]);
+
+      const { data: userRow, error: userError } = await supabase
+        .from("users")
+        .select("id, name")
+        .eq("email", authData.user.email)
+        .single();
+
+      if (userError || !userRow) {
+        console.error("User fetch error:", userError);
+        navigate("/login");
+        return;
+      }
+
+      setUserName(userRow.name || "Pengguna");
+      fetchData(userRow.id);
+    };
+
+    fetchUserAndData();
+  }, []);
+
+  const fetchData = async (userId) => {
+    const { data: dataMasuk } = await supabase
+      .from("pemasukan")
+      .select("*")
+      .eq("id_pengguna", userId);
+
+    const { data: dataKeluar } = await supabase
+      .from("pengeluaran")
+      .select("*")
+      .eq("id_pengguna", userId);
+
+    setPemasukan(dataMasuk || []);
+    setPengeluaran(dataKeluar || []);
+  };
+
+  const totalMasuk = pemasukan.reduce((sum, x) => sum + Number(x.jumlah), 0);
+  const totalKeluar = pengeluaran.reduce((sum, x) => sum + Number(x.jumlah), 0);
+  const saldo = totalMasuk - totalKeluar;
+
+  const transaksiGabungan = [
+    ...pemasukan.map((p) => ({ ...p, tipe: "Pemasukan" })),
+    ...pengeluaran.map((p) => ({ ...p, tipe: "Pengeluaran" })),
+  ].sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
+
+  const statistik = generateStatistik(transaksiGabungan);
 
   return (
     <div className="px-5 py-6 space-y-6">
       <PageHeader title={`Hi, ${userName}`}>
         <div className="grid grid-cols-3 gap-2 w-full">
-          <button
-            className="btn btn-primary w-full"
-            onClick={() => navigate("/main/Dashboard/pemasukan")}
-          >
+          <button className="btn btn-primary w-full" onClick={() => navigate("/main/Dashboard/pemasukan")}>
             + Pemasukan
           </button>
-          <button
-            className="btn btn-primary w-full"
-            onClick={() => navigate("/main/Dashboard/pengeluaran")}
-          >
+          <button className="btn btn-primary w-full" onClick={() => navigate("/main/Dashboard/pengeluaran")}>
             - Pengeluaran
           </button>
-          <button
-            className="btn btn-primary w-full"
-            onClick={() => navigate("/main/Dashboard/budgeting")}
-          >
+          <button className="btn btn-primary w-full" onClick={() => navigate("/main/Dashboard/budgeting")}>
             = Budgeting
           </button>
         </div>
       </PageHeader>
 
-      {/* Ringkasan Keuangan */}
+      {/* Ringkasan */}
       <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
-        {/* Saldo Akhir */}
-        <div className="card bg-base-100 shadow-md">
-          <div className="card-body flex-row items-center gap-4">
-            <div className="bg-green-100 text-green-600 rounded-full p-4 text-xl">
-              <FaWallet />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold">Rp 1.300.000</h2>
-              <p className="text-sm text-green-500">Saldo Akhir</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Total Pemasukan */}
-        <div className="card bg-base-100 shadow-md">
-          <div className="card-body flex-row items-center gap-4">
-            <div className="bg-blue-100 text-blue-600 rounded-full p-4 text-xl">
-              <FaArrowDown />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold">Rp 15.000.000</h2>
-              <p className="text-sm text-gray-500">Total Pemasukan</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Total Pengeluaran */}
-        <div className="card bg-base-100 shadow-md">
-          <div className="card-body flex-row items-center gap-4">
-            <div className="bg-red-100 text-red-500 rounded-full p-4 text-xl">
-              <FaArrowUp />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold">Rp 8.000.000</h2>
-              <p className="text-sm text-green-500">Total Pengeluaran</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Total Transaksi */}
-        <div className="card bg-base-100 shadow-md">
-          <div className="card-body flex-row items-center gap-4">
-            <div className="bg-yellow-100 text-yellow-600 rounded-full p-4 text-xl">
-              <FaMoneyBillWave />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold">35 Transaksi</h2>
-              <p className="text-sm text-green-500">Total Transaksi</p>
-            </div>
-          </div>
-        </div>
+        <SummaryCard icon={<FaWallet />} color="green" title={`Rp ${saldo.toLocaleString()}`} subtitle="Saldo Akhir" />
+        <SummaryCard icon={<FaArrowDown />} color="blue" title={`Rp ${totalMasuk.toLocaleString()}`} subtitle="Total Pemasukan" />
+        <SummaryCard icon={<FaArrowUp />} color="red" title={`Rp ${totalKeluar.toLocaleString()}`} subtitle="Total Pengeluaran" />
+        <SummaryCard icon={<FaMoneyBillWave />} color="yellow" title={`${transaksiGabungan.length} Transaksi`} subtitle="Total Transaksi" />
       </div>
 
-      {/* Statistik dan Distribusi */}
+      {/* Grafik */}
       <div className="grid md:grid-cols-3 gap-6">
-        {/* Statistik Keuangan Bulanan */}
+        {/* Grafik Garis */}
         <div className="card bg-base-100 shadow-md md:col-span-2">
           <div className="card-body">
-            <h2 className="card-title text-green-700">
-              Statistik Keuangan Bulanan
-            </h2>
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={statisticData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip
-                  formatter={(value) => `Rp ${value.toLocaleString()}`}
-                />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="Pemasukan"
-                  stroke="#8e44ad"
-                  strokeWidth={2}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="Pengeluaran"
-                  stroke="#f1c40f"
-                  strokeWidth={2}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <h2 className="card-title text-green-700">Statistik Keuangan</h2>
+            {statistik.length === 0 ? (
+              <p className="text-center text-sm text-gray-500">Belum ada data.</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={statistik}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="bulan" />
+                  <YAxis />
+                  <Tooltip formatter={(val) => `Rp ${Number(val).toLocaleString()}`} />
+                  <Legend />
+                  <Line type="linear" dataKey="Pemasukan" stroke="#8e44ad" strokeWidth={2} />
+                  <Line type="linear" dataKey="Pengeluaran" stroke="#f1c40f" strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
-        {/* Distribusi Keuangan */}
+        {/* Pie Chart */}
         <div className="card bg-base-100 shadow-md">
           <div className="card-body">
             <h2 className="card-title text-green-700">Distribusi Keuangan</h2>
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Pie
-                  data={distribusiData}
+                  data={[
+                    { name: "Pemasukan", value: totalMasuk },
+                    { name: "Pengeluaran", value: totalKeluar },
+                  ]}
                   dataKey="value"
                   nameKey="name"
                   cx="50%"
                   cy="50%"
                   outerRadius={80}
-                  label={({ name, percent }) =>
-                    `${name} ${(percent * 100).toFixed(0)}%`
-                  }
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                 >
-                  {distribusiData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
+                  <Cell fill="#8e44ad" />
+                  <Cell fill="#f1c40f" />
                 </Pie>
-                <Tooltip
-                  formatter={(value) => `Rp ${value.toLocaleString()}`}
-                />
+                <Tooltip formatter={(value) => `Rp ${value.toLocaleString()}`} />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
@@ -197,4 +163,41 @@ export default function Dashboard() {
       <Outlet />
     </div>
   );
+}
+
+function SummaryCard({ icon, color, title, subtitle }) {
+  return (
+    <div className="card bg-base-100 shadow-md">
+      <div className="card-body flex-row items-center gap-4">
+        <div className={`bg-${color}-100 text-${color}-600 rounded-full p-4 text-xl`}>{icon}</div>
+        <div>
+          <h2 className="text-xl font-bold">{title}</h2>
+          <p className={`text-sm text-${color}-500`}>{subtitle}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function generateStatistik(transaksi) {
+  const stats = {};
+
+  transaksi.forEach((item) => {
+    const date = new Date(item.tanggal);
+    if (isNaN(date)) return;
+
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+
+    if (!stats[key]) {
+      stats[key] = { bulan: key, Pemasukan: 0, Pengeluaran: 0 };
+    }
+
+    if (item.tipe === "Pemasukan") {
+      stats[key].Pemasukan += Number(item.jumlah);
+    } else {
+      stats[key].Pengeluaran += Number(item.jumlah);
+    }
+  });
+
+  return Object.values(stats).filter(item => item.Pemasukan > 0 || item.Pengeluaran > 0);
 }

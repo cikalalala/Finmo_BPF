@@ -1,23 +1,72 @@
-import { useState } from "react";
+// src/pages/AddExpense.jsx
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ImSpinner2 } from "react-icons/im";
+import { supabase } from "../assets/supabaseClient";
 
-export default function AddIncome() {
-  const [amount, setAmount] = useState("");
-  const [description, setDescription] = useState("");
-  const [date, setDate] = useState("");
+export default function AddExpense() {
+  const [jumlah, setJumlah] = useState("");
+  const [deskripsi, setDeskripsi] = useState("");
+  const [tanggal, setTanggal] = useState("");
   const [loading, setLoading] = useState(false);
+  const [userId, setUserId] = useState(null);
   const navigate = useNavigate();
 
-const handleSubmit = (e) => {
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+
+      if (authError) {
+        console.error("Auth error:", authError.message);
+        return;
+      }
+
+      if (authData?.user?.email) {
+        const { data: userRow, error: userError } = await supabase
+          .from("users")
+          .select("id")
+          .eq("email", authData.user.email)
+          .single();
+
+        if (userError) {
+          console.error("User table error:", userError.message);
+          alert("Pengguna tidak ditemukan di tabel 'users'.");
+        } else {
+          setUserId(userRow.id);
+        }
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    setTimeout(() => {
-      console.log({ amount, description, date });
+    if (!userId) {
+      alert("Gagal mendapatkan ID pengguna.");
       setLoading(false);
-      navigate("/main/Dashboard"); 
-    }, 1000);
+      return;
+    }
+
+    const { error } = await supabase.from("pengeluaran").insert([
+      {
+        id_pengguna: userId,
+        jumlah: parseFloat(jumlah),
+        deskripsi,
+        tanggal,
+      },
+    ]);
+
+    setLoading(false);
+
+    if (error) {
+      alert("Gagal menyimpan pengeluaran: " + error.message);
+    } else {
+      alert("Pengeluaran berhasil ditambahkan!");
+      navigate("/main/Dashboard");
+    }
   };
 
   return (
@@ -33,8 +82,8 @@ const handleSubmit = (e) => {
           <input
             type="number"
             required
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            value={jumlah}
+            onChange={(e) => setJumlah(e.target.value)}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500"
             placeholder="Contoh: 100000"
           />
@@ -47,10 +96,10 @@ const handleSubmit = (e) => {
           <input
             type="text"
             required
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            value={deskripsi}
+            onChange={(e) => setDeskripsi(e.target.value)}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500"
-            placeholder="Contoh: Gaji Freelance"
+            placeholder="Contoh: Bayar listrik"
           />
         </div>
 
@@ -61,8 +110,8 @@ const handleSubmit = (e) => {
           <input
             type="date"
             required
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
+            value={tanggal}
+            onChange={(e) => setTanggal(e.target.value)}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500"
           />
         </div>
@@ -72,9 +121,7 @@ const handleSubmit = (e) => {
           disabled={loading}
           className="w-full flex items-center justify-center bg-green-600 text-white font-semibold py-2 rounded-md hover:bg-green-700 transition"
         >
-          {loading ? (
-            <ImSpinner2 className="animate-spin mr-2" />
-          ) : null}
+          {loading && <ImSpinner2 className="animate-spin mr-2" />}
           Simpan
         </button>
       </form>
