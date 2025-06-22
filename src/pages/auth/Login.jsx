@@ -1,105 +1,70 @@
-import { ImSpinner2 } from "react-icons/im";
-import { BsFillExclamationDiamondFill } from "react-icons/bs";
-import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import axios from "axios";
+import { useNavigate, Link } from "react-router-dom"; // pastikan Link diimport
+import { supabase } from "../../../supabaseClient";
 
 export default function Login() {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
-  const [dataForm, setDataForm] = useState({ email: "", password: "" });
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setDataForm((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError("");
 
-    try {
-      const res = await axios.post("https://dummyjson.com/user/login", {
-        username: dataForm.email,
-        password: dataForm.password,
-      });
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email: formData.email,
+      password: formData.password,
+    });
 
-      if (res.status === 200) {
-        navigate("/main");
-      } else {
-        setError(res.data.message || "Login gagal.");
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "Terjadi kesalahan.");
-    } finally {
-      setLoading(false);
+    if (authError) {
+      setError(authError.message);
+      return;
     }
+
+    const { data: userData, error: dbError } = await supabase
+      .from("users")
+      .select("*")
+      .eq("email", formData.email)
+      .single();
+
+    if (dbError) {
+      setError("Login berhasil, tapi gagal ambil data pengguna: " + dbError.message);
+      return;
+    }
+
+    localStorage.setItem("user", JSON.stringify(userData));
+    navigate("/main");
   };
 
   return (
-    <div className="w-full max-w-sm mx-auto p-8 bg-white rounded-xl shadow-md">
-      <h1 className="text-3xl font-bold text-center text-gray-700 mb-6">Masuk ke FinMo</h1>
+    <form onSubmit={handleLogin} className="max-w-sm mx-auto p-4 bg-white rounded shadow">
+      <h2 className="text-xl font-bold mb-4">Login</h2>
+      {error && <div className="text-red-600 mb-2">{error}</div>}
+      <input
+        type="email"
+        name="email"
+        placeholder="Email"
+        required
+        onChange={handleChange}
+        className="input input-bordered w-full mb-3"
+      />
+      <input
+        type="password"
+        name="password"
+        placeholder="Password"
+        required
+        onChange={handleChange}
+        className="input input-bordered w-full mb-3"
+      />
+      <button type="submit" className="btn btn-primary w-full">Login</button>
 
-      {error && (
-        <div className="flex items-center gap-2 text-sm bg-red-100 text-red-700 p-3 rounded mb-4">
-          <BsFillExclamationDiamondFill />
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-600 mb-1">
-            Email
-          </label>
-          <input
-            id="email"
-            name="email"
-            type="text"
-            autoComplete="username"
-            placeholder="you@example.com"
-            onChange={handleChange}
-            className="input input-bordered w-full"
-            required
-          />
-        </div>
-
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-600 mb-1">
-            Password
-          </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            placeholder="********"
-            onChange={handleChange}
-            className="input input-bordered w-full"
-            required
-          />
-        </div>
-
-        <button
-          type="submit"
-          className={`btn btn-primary w-full flex justify-center items-center gap-2 ${
-            loading ? "btn-disabled" : ""
-          }`}
-        >
-          {loading ? (
-            <>
-              <ImSpinner2 className="animate-spin" />
-              Masuk...
-            </>
-          ) : (
-            "Masuk"
-          )}
-        </button>
-      </form>
-
-      <div className="flex justify-between items-center text-sm text-gray-600 mt-4">
+      {/* NOTE: Tambahan link di bawah */}
+      <div className="flex justify-between text-sm text-gray-600 mt-4">
         <Link to="/forgot" className="hover:underline text-blue-600">
           Lupa Password?
         </Link>
@@ -107,6 +72,6 @@ export default function Login() {
           Daftar Akun
         </Link>
       </div>
-    </div>
+    </form>
   );
 }

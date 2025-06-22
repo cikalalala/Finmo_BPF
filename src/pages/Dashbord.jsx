@@ -19,19 +19,37 @@ import {
   Legend,
 } from "recharts";
 
+import { useNavigate, Outlet } from "react-router-dom";
+import { useEffect, useState } from "react";
+
 import statisticData from "../data/statistik.json";
 import distribusiData from "../data/distribusi.json";
-import { useNavigate } from "react-router-dom"; // tambahin ini di paling atas
-import { Outlet } from "react-router-dom";
 
 const COLORS = ["#8e44ad", "#f1c40f"];
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const [userName, setUserName] = useState("Pengguna");
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+
+    if (!storedUser) {
+      navigate("/login");
+    } else {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUserName(parsedUser.name || "Pengguna");
+      } catch (err) {
+        console.error("Failed to parse user:", err);
+        navigate("/login");
+      }
+    }
+  }, [navigate]);
 
   return (
     <div className="px-5 py-6 space-y-6">
-      <PageHeader title="Hi, Kelompok 6">
+      <PageHeader title={`Hi, ${userName}`}>
         <div className="grid grid-cols-3 gap-2 w-full">
           <button
             className="btn btn-primary w-full"
