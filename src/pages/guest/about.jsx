@@ -1,60 +1,82 @@
-import { FaCheckCircle } from "react-icons/fa";
+import { FaCheckCircle, FaWallet, FaChartPie, FaBell, FaLightbulb } from "react-icons/fa";
 
 export default function About() {
   return (
     <section className="bg-gradient-to-b from-[#6170f0] to-[#359e4c] text-white min-h-screen flex items-center px-8 py-20 overflow-hidden">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-14 items-center">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
 
-        {/* Ilustrasi dan Icon Dekorasi */}
-        <div className="relative flex justify-center animate-fade-in-up">
-          <img
-            src="/Gambar/ImgAbout.png"
-            alt="Tentang Kami"
-            className="w-[380px] rounded-2xl z-10 relative"
-          />
-          {/* Icon Dekorasi */}
-          <div className="absolute top-0 left-0 animate-pulse-slow">
-            <img src="https://cdn-icons-png.flaticon.com/512/276/276020.png" alt="icon" className="w-10" />
+        {/* Bagian Kiri */}
+        <div className="space-y-8">
+          {/* Tentang Finmo */}
+          <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-lg space-y-4">
+            <span className="bg-yellow-400 text-black px-4 py-1 rounded-full text-sm font-semibold">Tentang Finmo 🚀</span>
+            <h2 className="text-4xl font-bold leading-tight">Platform Keuangan untuk Mahasiswa Modern</h2>
+            <p className="text-white/90 leading-relaxed">
+              Finmo adalah solusi pengelolaan keuangan pribadi yang dirancang khusus untuk mahasiswa. 
+              Dengan Finmo, kamu dapat lebih mudah mengontrol arus keuangan, merencanakan tabungan, serta 
+              mendapatkan laporan keuangan secara otomatis. Tidak perlu ribet dengan catatan manual, semua terorganisir dalam satu platform.
+            </p>
           </div>
-          <div className="absolute bottom-10 left-0 animate-bounce">
-            <img src="https://cdn-icons-png.flaticon.com/512/10384/10384161.png" alt="icon" className="w-12" />
-          </div>
-          <div className="absolute top-10 right-0 animate-float">
-            <img src="https://cdn-icons-png.flaticon.com/512/6475/6475944.png" alt="icon" className="w-14" />
+
+          {/* Fitur Finmo */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="bg-white/10 p-5 rounded-xl shadow-md hover:scale-105 transition space-y-2">
+              <FaWallet className="text-green-300 text-3xl" />
+              <h3 className="font-bold text-lg">Pencatatan Keuangan</h3>
+              <p className="text-white/80 text-sm">
+                Catat setiap pemasukan maupun pengeluaran secara cepat dengan antarmuka yang simpel dan praktis.
+              </p>
+            </div>
+            <div className="bg-white/10 p-5 rounded-xl shadow-md hover:scale-105 transition space-y-2">
+              <FaChartPie className="text-green-300 text-3xl" />
+              <h3 className="font-bold text-lg">Anggaran Bulanan</h3>
+              <p className="text-white/80 text-sm">
+                Tentukan batas pengeluaran bulanan untuk membantu kamu tetap disiplin dalam pengelolaan uang saku.
+              </p>
+            </div>
+            <div className="bg-white/10 p-5 rounded-xl shadow-md hover:scale-105 transition space-y-2">
+              <FaBell className="text-green-300 text-3xl" />
+              <h3 className="font-bold text-lg">Notifikasi Pengingat</h3>
+              <p className="text-white/80 text-sm">
+                Terima pengingat otomatis tentang anggaran dan pengeluaran mingguan agar lebih terkontrol.
+              </p>
+            </div>
+            <div className="bg-white/10 p-5 rounded-xl shadow-md hover:scale-105 transition space-y-2">
+              <FaLightbulb className="text-green-300 text-3xl" />
+              <h3 className="font-bold text-lg">Tips Hemat Mahasiswa</h3>
+              <p className="text-white/80 text-sm">
+                Dapatkan tips-tips hemat serta ide pengelolaan uang dari para ahli keuangan khusus untuk mahasiswa.
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Text dan Fitur */}
-        <div className="space-y-6">
-          <span className="bg-yellow-400 text-black px-4 py-1 rounded-full text-sm font-semibold">
-            Tentang Finmo 🚀
-          </span>
-          <h2 className="text-5xl font-bold leading-tight tracking-wide">
-            Kelola Keuangan Mahasiswa <span className="text-yellow-400">Lebih Mudah</span>
-          </h2>
-          <p className="text-white/80 text-lg leading-relaxed">
-            Finmo hadir untuk membantumu mencatat pemasukan, pengeluaran, dan membuat anggaran keuangan
-            yang lebih disiplin dan terarah. Cocok banget untuk mahasiswa yang ingin mengontrol keuangan dengan baik.
-          </p>
-          <div className="space-y-4 text-base text-white">
-            <div className="flex items-center gap-3">
-              <FaCheckCircle className="text-green-400 text-xl" />
-              Catatan keuangan harian mudah & cepat
+        {/* Bagian Kanan */}
+        <div className="relative flex flex-col items-center">
+          <div className="relative -mt-12">
+            <img
+              src="/Gambar/ImgAbout.png"
+              alt="Ilustrasi Finmo"
+              className="w-[400px] rounded-2xl animate-float"
+            />
+          </div>
+
+          {/* Visi Misi */}
+          <div className="mt-8 w-full flex flex-col gap-4">
+            <div className="bg-white/10 p-5 rounded-xl text-center shadow-md hover:shadow-lg transition">
+              <h3 className="font-bold text-xl text-yellow-300 mb-2">Visi Kami 🎯</h3>
+              <p className="text-white/80 text-sm">
+                Menjadi partner keuangan terpercaya mahasiswa Indonesia dengan layanan pengelolaan finansial yang inovatif, modern, dan mudah digunakan.
+              </p>
             </div>
-            <div className="flex items-center gap-3">
-              <FaCheckCircle className="text-green-400 text-xl" />
-              Rencana anggaran bulanan terkontrol
-            </div>
-            <div className="flex items-center gap-3">
-              <FaCheckCircle className="text-green-400 text-xl" />
-              Grafik pengeluaran otomatis & akurat
+            <div className="bg-white/10 p-5 rounded-xl text-center shadow-md hover:shadow-lg transition">
+              <h3 className="font-bold text-xl text-yellow-300 mb-2">Misi Kami 🌟</h3>
+              <p className="text-white/80 text-sm">
+                Menciptakan budaya finansial yang sehat bagi mahasiswa dengan memberikan tools edukasi keuangan praktis, pengingat keuangan rutin, dan fitur analisa pengeluaran otomatis.
+              </p>
             </div>
           </div>
-          <button className="mt-8 px-8 py-3 rounded-full bg-yellow-400 text-black text-lg font-bold hover:scale-105 transition">
-            Coba Finmo Sekarang!
-          </button>
         </div>
-
       </div>
     </section>
   );

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { FaQuestionCircle, FaChevronDown, FaChevronUp } from "react-icons/fa";
 
 export default function FAQpage() {
   const faqData = [
@@ -62,9 +63,19 @@ export default function FAQpage() {
               className={`bg-white/10 backdrop-blur-md rounded-xl p-6 shadow-md hover:shadow-xl transition-all cursor-pointer ${activeIndex === index ? 'ring-2 ring-yellow-400' : ''}`}
               onClick={() => toggleFAQ(index)}
             >
-              <h3 className="text-xl font-semibold mb-2">{item.question}</h3>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-3">
+                  <FaQuestionCircle className="text-yellow-300 text-xl" />
+                  <h3 className="text-xl font-semibold">{item.question}</h3>
+                </div>
+                {activeIndex === index ? (
+                  <FaChevronUp className="text-yellow-300" />
+                ) : (
+                  <FaChevronDown className="text-yellow-300" />
+                )}
+              </div>
               <div
-                className={`transition-max-height duration-500 ease-in-out overflow-hidden ${activeIndex === index ? 'max-h-40' : 'max-h-0'}`}
+                className={`transition-all duration-300 ease-in-out overflow-hidden ${activeIndex === index ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}
               >
                 <p className="text-white/80 text-base">{item.answer}</p>
               </div>
