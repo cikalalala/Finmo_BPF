@@ -8,7 +8,7 @@ import {
 
 export default function Contact() {
   return (
-    <div className="min-h-screen text-white px-6 py-16">
+    <div className="min-h-screen text-white px-6 py-16 bg-gradient-to-b from-[#6170f0] to-[#359e4c]">
       {/* Bagian Judul Tengah */}
       <div className="text-center mb-12">
         <h2 className="text-4xl font-bold">Kontak</h2>

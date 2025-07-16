@@ -1,5 +1,5 @@
 import { Link, Outlet } from "react-router-dom";
-
+import Footer from "../components/Footer";
 export default function GuestLayout({ children }) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1f3a7e] to-[#26a136] text-white">
@@ -22,6 +22,7 @@ export default function GuestLayout({ children }) {
         </nav>
       </header>
       <main><Outlet /></main>
+      <Footer />
     </div>
   );
 }

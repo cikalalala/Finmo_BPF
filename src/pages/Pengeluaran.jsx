@@ -15,7 +15,7 @@ export default function Pengeluaran() {
   const [kategori, setKategori] = useState("");
   const [jumlah, setJumlah] = useState("");
   const [deskripsi, setDeskripsi] = useState("");
-  const [tanggal, setTanggal] = useState("");
+  const [tanggal, setTanggal] = useState(""); // Ini tetap untuk input type="date"
   const [userId, setUserId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
@@ -33,7 +33,8 @@ export default function Pengeluaran() {
   useEffect(() => {
     const fetchUser = async () => {
       setAuthLoading(true);
-      const { data: authData, error: authError } = await supabase.auth.getUser();
+      const { data: authData, error: authError } =
+        await supabase.auth.getUser();
 
       if (authError || !authData?.user) {
         console.error("Auth error:", authError?.message || "User not found");
@@ -51,7 +52,10 @@ export default function Pengeluaran() {
         .single();
 
       if (userError || !userRow) {
-        console.error("User table error:", userError?.message || "User not found in DB");
+        console.error(
+          "User table error:",
+          userError?.message || "User not found in DB"
+        );
         alert("Pengguna tidak ditemukan di database.");
         navigate("/login");
         return;
@@ -74,30 +78,43 @@ export default function Pengeluaran() {
       return;
     }
 
-    if (parseFloat(jumlah) <= 0) {
-      alert("Jumlah harus lebih dari 0.");
+    // Validasi input
+    if (!kategori || !jumlah || !deskripsi || !tanggal) {
+      alert("Harap lengkapi semua data.");
+      setLoading(false);
+      return;
+    }
+    const parsedJumlah = parseFloat(jumlah);
+    if (isNaN(parsedJumlah) || parsedJumlah <= 0) {
+      alert("Jumlah harus angka positif.");
       setLoading(false);
       return;
     }
 
-    const { error } = await supabase.from("pengeluaran").insert([
-      {
-        id_pengguna: userId,
-        kategori,
-        jumlah: parseFloat(jumlah),
-        deskripsi,
-        tanggal,
-      },
-    ]);
+    try {
+      const { error } = await supabase.from("pengeluaran").insert([
+        {
+          id_pengguna: userId,
+          kategori,
+          jumlah: parsedJumlah,
+          deskripsi,
+          // <<< PERUBAHAN DI SINI: Simpan waktu saat ini untuk pengeluaran >>>
+          tanggal: new Date().toISOString(), // Menggunakan waktu submit form
+        },
+      ]);
 
-    setLoading(false);
+      setLoading(false);
 
-    if (error) {
-      console.error("Insert error:", error.message);
-      alert("Gagal menyimpan pengeluaran. Silakan coba lagi.");
-    } else {
-      alert("Pengeluaran berhasil ditambahkan!");
-      navigate("/main/Dashboard");
+      if (error) {
+        console.error("Insert error:", error.message);
+        alert("Gagal menyimpan pengeluaran. Silakan coba lagi.");
+      } else {
+        alert("Pengeluaran berhasil ditambahkan!");
+        navigate("/main/Dashboard");
+      }
+    } catch (err) {
+      setLoading(false);
+      alert("Terjadi kesalahan: " + err.message);
     }
   };
 
@@ -133,6 +150,12 @@ export default function Pengeluaran() {
               {item.label}
             </button>
           ))}
+          <button
+            onClick={() => navigate(-1)}
+            className="bg-gray-300 hover:bg-gray-400 text-black py-2 px-4 rounded-md transition duration-300"
+          >
+            Kembali
+          </button>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4 mt-6">

@@ -1,15 +1,20 @@
-// src/pages/Pemasukan.jsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ImSpinner2 } from "react-icons/im";
-import { FiGift, FiBriefcase, FiDollarSign, FiTrendingUp, FiMoreHorizontal } from "react-icons/fi";
+import {
+  FiGift,
+  FiBriefcase,
+  FiDollarSign,
+  FiTrendingUp,
+  FiMoreHorizontal,
+} from "react-icons/fi";
 import { supabase } from "../assets/supabaseClient";
 
 export default function Pemasukan() {
   const [kategoriDipilih, setKategoriDipilih] = useState("");
   const [jumlah, setJumlah] = useState("");
   const [deskripsi, setDeskripsi] = useState("");
-  const [tanggal, setTanggal] = useState("");
+  const [tanggal, setTanggal] = useState(""); // Ini tetap untuk input type="date"
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState(null);
   const navigate = useNavigate();
@@ -24,10 +29,12 @@ export default function Pemasukan() {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const { data: authData, error: authError } = await supabase.auth.getUser();
+      const { data: authData, error: authError } =
+        await supabase.auth.getUser();
 
       if (authError) {
         console.error("Auth error:", authError.message);
+        navigate("/login");
         return;
       }
 
@@ -41,14 +48,17 @@ export default function Pemasukan() {
         if (userError) {
           console.error("User table error:", userError.message);
           alert("Pengguna tidak ditemukan di tabel 'users'.");
+          navigate("/login"); // Redirect jika user tidak ditemukan
         } else {
           setUserId(userRow.id);
         }
+      } else {
+        navigate("/login"); // Redirect jika tidak ada user
       }
     };
 
     fetchUser();
-  }, []);
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -66,23 +76,37 @@ export default function Pemasukan() {
       return;
     }
 
-    const { error } = await supabase.from("pemasukan").insert([
-      {
-        id_pengguna: userId,
-        kategori: kategoriDipilih,
-        jumlah: parseFloat(jumlah),
-        deskripsi,
-        tanggal,
-      },
-    ]);
+    // Pastikan jumlah adalah angka yang valid dan positif
+    const parsedJumlah = parseFloat(jumlah);
+    if (isNaN(parsedJumlah) || parsedJumlah <= 0) {
+      alert("Jumlah harus angka positif.");
+      setLoading(false);
+      return;
+    }
 
-    setLoading(false);
+    try {
+      const { error } = await supabase.from("pemasukan").insert([
+        {
+          id_pengguna: userId,
+          kategori: kategoriDipilih,
+          jumlah: parsedJumlah,
+          deskripsi,
+          // <<< PERUBAHAN DI SINI: Simpan waktu saat ini untuk pemasukan >>>
+          tanggal: new Date().toISOString(), // Menggunakan waktu submit form
+        },
+      ]);
 
-    if (error) {
-      alert("Gagal menyimpan pemasukan: " + error.message);
-    } else {
-      alert("Pemasukan berhasil ditambahkan!");
-      navigate("/main/Dashboard");
+      setLoading(false);
+
+      if (error) {
+        alert("Gagal menyimpan pemasukan: " + error.message);
+      } else {
+        alert("Pemasukan berhasil ditambahkan!");
+        navigate("/main/Dashboard");
+      }
+    } catch (err) {
+      setLoading(false);
+      alert("Terjadi kesalahan: " + err.message);
     }
   };
 
@@ -104,6 +128,12 @@ export default function Pemasukan() {
               <span className="text-sm">{kategori.nama}</span>
             </button>
           ))}
+          <button
+            onClick={() => navigate(-1)}
+            className="bg-gray-300 hover:bg-gray-400 text-black py-2 px-4 rounded-md transition duration-300"
+          >
+            Kembali
+          </button>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4 mt-6">
