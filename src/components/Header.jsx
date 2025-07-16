@@ -1,7 +1,8 @@
-import { FaSearch, FaBell } from "react-icons/fa";
+import { FaSearch } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { supabase } from "../assets/supabaseClient";
+import Notifikasi from "../pages/Notifikasi";
 
 export default function Header() {
   const navigate = useNavigate();
@@ -18,7 +19,6 @@ export default function Header() {
       <div className="h-16 flex items-center justify-between px-4">
         {/* Logo dan Navigasi */}
         <div className="flex items-center gap-12">
-          {/* Logo */}
           <div className="flex items-center gap-2 text-white font-bold text-lg">
             <img
               src="https://static.vecteezy.com/system/resources/previews/023/886/948/original/crypto-currency-coin-on-transparent-background-png.png"
@@ -28,7 +28,6 @@ export default function Header() {
             <span>FINMO</span>
           </div>
 
-          {/* Navigasi */}
           <nav className="hidden md:flex items-center gap-8 text-white text-sm font-medium">
             <Link to="/main/Dashboard" className="hover:underline">
               Dashboard
@@ -39,18 +38,13 @@ export default function Header() {
           </nav>
         </div>
 
-        {/* Search, Notifikasi, dan Avatar + Logout */}
+        {/* Search, Notifikasi, dan Avatar */}
         <div className="relative flex items-center gap-6 text-white">
           <button className="hover:text-gray-300">
             <FaSearch />
           </button>
 
-          <div className="relative">
-            <FaBell className="text-white text-lg cursor-pointer" />
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
-              3
-            </span>
-          </div>
+          <Notifikasi />
 
           <div
             className="relative flex items-center gap-2 cursor-pointer"

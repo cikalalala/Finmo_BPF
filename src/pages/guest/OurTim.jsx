@@ -6,9 +6,9 @@ export default function OurTeam() {
       image: new URL("/Gambar/Rizal.jpg", import.meta.url).href,
     },
     {
-      name: "Cikal",
+      name: "Cikal Nur Adhani Dharma",
       role: "Back End Developer",
-      image: new URL("../../assets/foto2.png", import.meta.url).href,
+      image: new URL("/Gambar/cikal.png", import.meta.url).href,
     },
     {
       name: "Radit",
