@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AlertTriangle, Wallet, CalendarCheck, RotateCcw } from "lucide-react";
-import supabase from "../lib/supabase";
+
 
 export default function Budgeting() {
   const [budget, setBudget] = useState("");
