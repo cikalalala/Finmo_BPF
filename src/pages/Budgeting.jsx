@@ -1,184 +1,244 @@
 import { useEffect, useState } from "react";
 import { AlertTriangle, Wallet, CalendarCheck, RotateCcw } from "lucide-react";
+import supabase from "../lib/supabase";
 
-
-export default function Budgeting() {
-  const [budget, setBudget] = useState("");
-  const [duration, setDuration] = useState("7");
-  const [customDuration, setCustomDuration] = useState("");
-  const [canReset, setCanReset] = useState(false);
-  const [sisaHari, setSisaHari] = useState(null);
-  const [warning, setWarning] = useState("");
-  const [budgetData, setBudgetData] = useState(null);
+const Budgeting = () => {
+  const [jumlah, setJumlah] = useState("");
+  const [tanggalMulai, setTanggalMulai] = useState(""); // Ini tetap untuk input type="date"
+  const [durasiOption, setDurasiOption] = useState("");
+  const [customDurasi, setCustomDurasi] = useState("");
+  const [userId, setUserId] = useState(null);
+  const [isActiveBudgeting, setIsActiveBudgeting] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchBudget = async () => {
-      const { data, error } = await supabase
-        .from("budgeting")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .single();
+    const getUserIdAndCheckBudget = async () => {
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
 
-      if (error) {
-        console.error("Gagal ambil budgeting:", error);
+      if (sessionError) {
+        console.error("Failed to get session:", sessionError.message);
+        navigate("/login");
         return;
       }
 
-      if (data) {
-        setBudgetData(data);
-        const start = new Date(data.start_date);
-        const now = new Date();
-        const selisihHari = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+      const email = session?.user?.email;
+      if (!email) {
+        console.error("Email not found in session.");
+        navigate("/login");
+        return;
+      }
 
-        if (selisihHari < data.duration) {
-          setCanReset(true);
-          setSisaHari(data.duration - selisihHari);
+      const { data: userData, error: userError } = await supabase
+        .from("users")
+        .select("id")
+        .eq("email", email)
+        .single();
 
-          const pengeluaranHariIni = 200000; // dummy dulu
-          const batasHarian = data.budget / data.duration;
-          if (pengeluaranHariIni > batasHarian * 0.5) {
-            setWarning("⚠️ Pengeluaran hari ini melebihi 50% dari batas harian.");
-          } else {
-            setWarning("");
-          }
-        } else {
-          setCanReset(false);
-          setSisaHari(0);
+      if (userError || !userData) {
+        console.error("Invalid user ID:", userError?.message);
+        navigate("/login");
+      } else {
+        setUserId(userData.id);
+
+        // Check if there's an active budget
+        const { data: budgetData, error: budgetError } = await supabase
+          .from("budgeting")
+          .select("*")
+          .eq("user_id", userData.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single();
+
+        if (budgetError && budgetError.code !== 'PGRST116') {
+          console.error("Error fetching budget:", budgetError);
         }
+
+        if (budgetData) {
+          const startDate = new Date(budgetData.tanggal_mulai);
+          const endDate = new Date(startDate);
+          endDate.setDate(startDate.getDate() + budgetData.durasi_hari);
+
+          if (new Date() < endDate) {
+            setIsActiveBudgeting(true);
+            return;
+          }
+        }
+        setShowForm(true);
       }
     };
 
-    fetchBudget();
-  }, []);
+    getUserIdAndCheckBudget();
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const durasiFix =
-      duration === "custom" ? parseInt(customDuration) : parseInt(duration);
+    if (!userId) return alert("User ID not ready");
+    if (!jumlah || parseFloat(jumlah) <= 0 || isNaN(parseFloat(jumlah)))
+      return alert("Masukkan jumlah yang valid");
 
-    const { error } = await supabase.from("budgeting").insert([
-      {
-        budget: parseInt(budget),
-        duration: durasiFix,
-        start_date: new Date().toISOString(),
-      },
-    ]);
+    let durasiFinal =
+      durasiOption === "custom"
+        ? parseInt(customDurasi)
+        : parseInt(durasiOption);
 
-    if (error) {
-      alert("❌ Gagal menyimpan budget.");
-      console.error(error);
-      return;
+    if (!durasiFinal || durasiFinal <= 0 || isNaN(durasiFinal))
+      return alert("Durasi tidak valid");
+
+    // Perbaikan: Anda ingin tanggal mulai budget adalah TANGGAL SAAT TOMBOL SIMPAN DIKLIK
+    // Jika tidak ada input tanggalMulai dari user, gunakan waktu saat ini
+    // Jika ada, gunakan tanggal yang dipilih user tapi dengan waktu saat ini
+    // Atau, cara paling sederhana dan akurat untuk filtering: selalu gunakan waktu saat ini
+    
+    // Pilihan 1 (paling direkomendasikan untuk filtering "setelah budget dibuat"):
+    // Gunakan waktu saat ini untuk tanggal_mulai budget
+    const finalTanggalMulai = new Date().toISOString(); 
+    
+    // Pilihan 2 (jika Anda ingin tanggalnya sesuai input user, tapi waktunya tetap 00:00:00 jika input type="date"):
+    // const finalTanggalMulai = tanggalMulai ? new Date(tanggalMulai).toISOString() : new Date().toISOString(); 
+    // ^ Ini akan tetap menghasilkan 'YYYY-MM-DD 00:00:00' jika inputnya hanya dari type="date"
+
+    // Pilihan 3 (menggabungkan tanggal input dengan waktu saat ini) - ini agak kompleks jika inputnya hanya 'date'
+    // const chosenDate = new Date(tanggalMulai);
+    // const now = new Date();
+    // chosenDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+    // const finalTanggalMulai = chosenDate.toISOString();
+
+
+    try {
+      // Hapus budget sebelumnya untuk pengguna ini (sesuai logika Anda)
+      await supabase.from("budgeting").delete().eq("user_id", userId);
+
+      // Simpan budget baru
+      const { error } = await supabase.from("budgeting").insert([
+        {
+          user_id: userId,
+          jumlah: parseFloat(jumlah),
+          tanggal_mulai: finalTanggalMulai, // <--- GUNAKAN VARIABEL YANG SUDAH DITENTUKAN
+          durasi_hari: durasiFinal,
+        },
+      ]);
+
+      if (error) throw error;
+
+      alert("Budget berhasil disimpan!");
+      navigate("/main/Dashboard");
+    } catch (error) {
+      alert(`Gagal menyimpan: ${error.message}`);
     }
-
-    alert("✅ Budget berhasil disimpan!");
-    window.location.reload();
   };
 
   const handleReset = async () => {
-    if (confirm("Yakin ingin mereset budgeting sekarang?")) {
-      if (!budgetData?.id) return;
-      const { error } = await supabase
-        .from("budgeting")
-        .delete()
-        .eq("id", budgetData.id);
-
-      if (error) {
-        alert("❌ Gagal reset budget.");
-        console.error(error);
+    try {
+      if (!userId) {
+        alert("User ID tidak ditemukan. Coba refresh halaman.");
         return;
       }
-
-      alert("🔄 Budget berhasil di-reset!");
-      window.location.reload();
+      await supabase.from("budgeting").delete().eq("user_id", userId);
+      setIsActiveBudgeting(false);
+      setShowForm(true);
+      alert("Budget sebelumnya berhasil dihapus. Silakan isi ulang.");
+    } catch (error) {
+      alert(`Gagal reset: ${error.message}`);
     }
   };
 
   return (
-    <div className="max-w-2xl mx-auto bg-white p-6 rounded-2xl shadow-md mt-10 space-y-6">
-      <h2 className="text-3xl font-bold flex items-center gap-2">
-        <Wallet className="w-7 h-7 text-blue-600" />
-        Atur Budget
-      </h2>
-
-      {sisaHari !== null && (
-        <div className="flex items-center gap-2 text-gray-700 text-sm bg-gray-100 p-3 rounded-lg">
-          <CalendarCheck className="w-5 h-5 text-green-600" />
-          <span>
-            <strong>Budget aktif:</strong> masih berlaku selama {sisaHari} hari lagi.
-          </span>
-        </div>
-      )}
-
-      {warning && (
-        <div className="flex items-center gap-2 bg-yellow-100 text-yellow-800 p-3 rounded-md text-sm">
-          <AlertTriangle className="w-5 h-5" />
-          {warning}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            Jumlah Budget (Rp)
-          </label>
-          <input
-            type="number"
-            value={budget}
-            onChange={(e) => setBudget(e.target.value)}
-            required
-            className="input input-bordered w-full"
-            placeholder="Contoh: 1000000"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Durasi</label>
-          <select
-            value={duration}
-            onChange={(e) => setDuration(e.target.value)}
-            className="select select-bordered w-full"
-          >
-            <option value="7">7 Hari</option>
-            <option value="14">14 Hari</option>
-            <option value="30">30 Hari</option>
-            <option value="custom">Custom</option>
-          </select>
-        </div>
-
-        {duration === "custom" && (
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Durasi Custom (hari)
-            </label>
-            <input
-              type="number"
-              value={customDuration}
-              onChange={(e) => setCustomDuration(e.target.value)}
-              min="1"
-              required
-              className="input input-bordered w-full"
-              placeholder="Contoh: 10"
-            />
+    <div className="max-w-md mx-auto mt-10 bg-white p-6 rounded-xl shadow-md">
+      {isActiveBudgeting && !showForm ? (
+        <div className="text-center">
+          <p className="mb-4 text-red-600 font-semibold">
+            ❗ Kamu masih punya budgeting yang aktif.
+            <br />
+            Harap reset dulu sebelum buat yang baru.
+          </p>
+          <div className="flex justify-center gap-4">
+            <button
+              onClick={handleReset}
+              className="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-md transition duration-300"
+            >
+              Reset Budgeting
+            </button>
+            <button
+              onClick={() => navigate(-1)}
+              className="bg-gray-300 hover:bg-gray-400 text-black py-2 px-4 rounded-md transition duration-300"
+            >
+              Kembali
+            </button>
           </div>
-        )}
-
-        <button type="submit" className="btn btn-primary w-full">
-          Simpan Budget
-        </button>
-      </form>
-
-      {canReset && (
-        <button
-          type="button"
-          onClick={handleReset}
-          className="btn btn-outline btn-error w-full flex items-center justify-center gap-2"
-        >
-          <RotateCcw className="w-5 h-5" />
-          Reset Budget
-        </button>
+        </div>
+      ) : (
+        <>
+          <h2 className="text-2xl font-bold mb-6 text-center text-blue-600">
+            Budgeting Form
+          </h2>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block mb-1 font-medium">Jumlah</label>
+              <input
+                type="number"
+                value={jumlah}
+                onChange={(e) => setJumlah(e.target.value)}
+                required
+                min="1"
+                className="w-full border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+            </div>
+            <div>
+              <label className="block mb-1 font-medium">Tanggal Mulai</label>
+              <input
+                type="date"
+                value={tanggalMulai} // Tetap ambil nilai dari input date
+                onChange={(e) => setTanggalMulai(e.target.value)}
+                required
+                className="w-full border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+            </div>
+            <div>
+              <label className="block mb-1 font-medium">Durasi (hari)</label>
+              <select
+                value={durasiOption}
+                onChange={(e) => setDurasiOption(e.target.value)}
+                required
+                className="w-full border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+              >
+                <option value="">Pilih durasi</option>
+                <option value="7">7 hari</option>
+                <option value="14">14 hari</option>
+                <option value="30">30 hari</option>
+                <option value="custom">Custom</option>
+              </select>
+            </div>
+            {durasiOption === "custom" && (
+              <div>
+                <label className="block mb-1 font-medium">
+                  Durasi Custom (hari)
+                </label>
+                <input
+                  type="number"
+                  value={customDurasi}
+                  onChange={(e) => setCustomDurasi(e.target.value)}
+                  required
+                  min="1"
+                  className="w-full border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+              </div>
+            )}
+            <button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition duration-300"
+            >
+              Simpan Budget
+            </button>
+          </form>
+        </>
       )}
     </div>
   );
-}
+};
+
+export default Budgeting;
