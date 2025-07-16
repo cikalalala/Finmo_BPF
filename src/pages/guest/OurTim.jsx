@@ -18,7 +18,7 @@ export default function OurTeam() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b py-12">
+    <div className="min-h-screen py-12 bg-gradient-to-b from-[#359e4c] to-[#6170f0] text-white">
       <div className="text-center mb-12">
         <h2 className="text-3xl font-bold uppercase">TEAM</h2>
         <p className="text-gray-200 mt-2 max-w-xl mx-auto">

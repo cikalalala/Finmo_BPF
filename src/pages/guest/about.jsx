@@ -1,60 +1,60 @@
-import React from 'react';
+import { FaCheckCircle } from "react-icons/fa";
 
 export default function About() {
   return (
-    <section >
-      <div className="max-w-7xl mx-auto text-center space-y-10">
+    <section className="bg-gradient-to-b from-[#6170f0] to-[#359e4c] text-white min-h-screen flex items-center px-8 py-20 overflow-hidden">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-14 items-center">
 
-        {/* Judul dan Deskripsi */}
-        <div className="space-y-4">
-          <h2 className="text-4xl font-bold">Tentang Kami</h2>
-          <p className="text-white/80 text-lg max-w-2xl mx-auto leading-relaxed">
-            Website manajemen keuangan yang membantu mahasiswa mengelola pemasukan, pengeluaran,
-            dan tabungan secara bijak dan terstruktur.
-          </p>
-        </div>
-
-        {/* Avatar Tim */}
-        <div className="flex justify-center gap-8 flex-wrap">
-          <img src="https://cdn-icons-png.flaticon.com/512/3135/3135823.png" alt="Team 1" className="w-40 h-40 rounded-full" />
-          <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSOH2aZnIHWjMQj2lQUOWIL2f4Hljgab0ecZQ&s" alt="Team 2" className="w-40 h-40 rounded-full" />
-          <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSOH2aZnIHWjMQj2lQUOWIL2f4Hljgab0ecZQ&s" alt="Team 3" className="w-40 h-40 rounded-full" />
-        </div>
-
-        {/* Siapa Kami */}
-        <div className="mt-12 space-y-4">
-          <h3 className="text-xl font-semibold">Siapa Kami?</h3>
-          <p className="text-white/80 text-base max-w-3xl mx-auto leading-relaxed">
-            Kami adalah tim pengembang muda yang memahami tantangan mahasiswa dalam mengelola uang bulanan.
-            Dengan latar belakang sebagai mahasiswa juga, kami ingin menciptakan platform yang mudah digunakan,
-            bermanfaat, dan benar-benar menjawab kebutuhan keuangan harian mahasiswa.
-          </p>
-        </div>
-
-        {/* Misi dan Visi */}
-        <div className="flex flex-col lg:flex-row justify-between items-start mt-16 gap-8">
-          <div className="bg-[#175c3e]/60 p-6 rounded-md w-full lg:w-1/2">
-            <h4 className="font-semibold text-white mb-2">Misi Kami</h4>
-            <p className="text-white/80 leading-relaxed">
-              Membantu mahasiswa lebih disiplin dalam mengelola keuangan pribadi dan membangun kebiasaan finansial yang sehat.
-            </p>
-          </div>
-          <div className="bg-[#175c3e]/60 p-6 rounded-md w-full lg:w-1/2">
-            <h4 className="font-semibold text-white mb-2">Visi Kami</h4>
-            <p className="text-white/80 leading-relaxed">
-              Menjadi platform manajemen keuangan pilihan utama mahasiswa di seluruh Indonesia.
-            </p>
-          </div>
-        </div>
-
-        {/* Ilustrasi */}
-        <div className="mt-10 flex justify-end">
+        {/* Ilustrasi dan Icon Dekorasi */}
+        <div className="relative flex justify-center animate-fade-in-up">
           <img
             src="/Gambar/ImgAbout.png"
-            alt="Ilustrasi Finansial"
-            className="w-72"
+            alt="Tentang Kami"
+            className="w-[380px] rounded-2xl z-10 relative"
           />
+          {/* Icon Dekorasi */}
+          <div className="absolute top-0 left-0 animate-pulse-slow">
+            <img src="https://cdn-icons-png.flaticon.com/512/276/276020.png" alt="icon" className="w-10" />
+          </div>
+          <div className="absolute bottom-10 left-0 animate-bounce">
+            <img src="https://cdn-icons-png.flaticon.com/512/10384/10384161.png" alt="icon" className="w-12" />
+          </div>
+          <div className="absolute top-10 right-0 animate-float">
+            <img src="https://cdn-icons-png.flaticon.com/512/6475/6475944.png" alt="icon" className="w-14" />
+          </div>
         </div>
+
+        {/* Text dan Fitur */}
+        <div className="space-y-6">
+          <span className="bg-yellow-400 text-black px-4 py-1 rounded-full text-sm font-semibold">
+            Tentang Finmo 🚀
+          </span>
+          <h2 className="text-5xl font-bold leading-tight tracking-wide">
+            Kelola Keuangan Mahasiswa <span className="text-yellow-400">Lebih Mudah</span>
+          </h2>
+          <p className="text-white/80 text-lg leading-relaxed">
+            Finmo hadir untuk membantumu mencatat pemasukan, pengeluaran, dan membuat anggaran keuangan
+            yang lebih disiplin dan terarah. Cocok banget untuk mahasiswa yang ingin mengontrol keuangan dengan baik.
+          </p>
+          <div className="space-y-4 text-base text-white">
+            <div className="flex items-center gap-3">
+              <FaCheckCircle className="text-green-400 text-xl" />
+              Catatan keuangan harian mudah & cepat
+            </div>
+            <div className="flex items-center gap-3">
+              <FaCheckCircle className="text-green-400 text-xl" />
+              Rencana anggaran bulanan terkontrol
+            </div>
+            <div className="flex items-center gap-3">
+              <FaCheckCircle className="text-green-400 text-xl" />
+              Grafik pengeluaran otomatis & akurat
+            </div>
+          </div>
+          <button className="mt-8 px-8 py-3 rounded-full bg-yellow-400 text-black text-lg font-bold hover:scale-105 transition">
+            Coba Finmo Sekarang!
+          </button>
+        </div>
+
       </div>
     </section>
   );
