@@ -64,20 +64,30 @@ export default function Login() {
           onChange={handleChange}
           className="input input-bordered w-full"
         />
-      </div>
+      
 
       <button
         type="submit"
-        className="btn btn-primary w-full mt-6 hover:scale-[1.02] transition-transform"
+        className="w-full py-2 text-white font-semibold rounded-xl 
+             bg-gradient-to-r from-blue-500 to-green-500 
+             hover:from-blue-600 hover:to-green-600 
+             transition-transform hover:scale-[1.02] shadow-md"
       >
         Login
       </button>
+</div>
 
       <div className="flex justify-between mt-4 text-sm text-gray-600">
         <Link to="/forgot" className="hover:underline text-blue-600">Lupa Password?</Link>
         <Link to="/register" className="hover:underline text-blue-600">Daftar Akun</Link>
       </div>
 
+      <Link
+        to="/"
+        className="block text-center mt-4 text-gray-500 hover:text-blue-600 hover:underline transition-colors"
+      >
+        Kembali ke Halaman Utama
+      </Link>
     </form>
   );
 }

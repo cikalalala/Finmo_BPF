@@ -3,7 +3,12 @@ import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "../../assets/supabaseClient";
 
 export default function Register() {
-  const [formData, setFormData] = useState({ name: "", email: "", password: "" });
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: ""
+  });
+
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -16,10 +21,9 @@ export default function Register() {
     e.preventDefault();
     setError("");
 
-    // 1. Daftarkan ke Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: formData.email,
-      password: formData.password,
+      password: formData.password
     });
 
     if (authError) {
@@ -27,14 +31,11 @@ export default function Register() {
       return;
     }
 
-    // 2. Simpan ke tabel `users`
-    const { error: dbError } = await supabase.from("users").insert([
-      {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password, // disarankan hash di backend!
-      },
-    ]);
+    const { error: dbError } = await supabase.from("users").insert([{
+      name: formData.name,
+      email: formData.email,
+      password: formData.password, // Sebaiknya hash di backend
+    }]);
 
     if (dbError) {
       setError("Pendaftaran berhasil, tapi gagal menyimpan ke database: " + dbError.message);
@@ -47,9 +48,13 @@ export default function Register() {
 
   return (
     <form onSubmit={handleRegister} className="max-w-sm mx-auto p-6 bg-white bg-opacity-80 backdrop-blur-md rounded-2xl shadow-lg">
-      <h2 className="text-2xl font-extrabold text-gray-800 mb-5 text-center">Daftar Akun Finmo</h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-5 text-center">Daftar Akun Finmo</h2>
 
-      {error && <div className="text-red-500 text-sm mb-4 text-center">{error}</div>}
+      {error && (
+        <div className="text-red-500 text-center text-sm mb-4">
+          {error}
+        </div>
+      )}
 
       <input
         type="text"
@@ -75,9 +80,18 @@ export default function Register() {
         onChange={handleChange}
         className="input input-bordered w-full mb-3"
       />
-      <button type="submit" className="btn btn-primary w-full hover:scale-[1.02] transition-transform">Daftar</button>
 
-      {/* Sudah punya akun? */}
+      <button
+        type="submit"
+        className="w-full py-2 text-white font-semibold rounded-xl 
+             bg-gradient-to-r from-blue-500 to-green-500 
+             hover:from-blue-600 hover:to-green-600 
+             transition-transform hover:scale-[1.02] shadow-md"
+      >
+        Register
+      </button>
+
+      {/* Link masuk */}
       <p className="text-center text-sm text-gray-600 mt-4">
         Sudah punya akun?{" "}
         <Link to="/login" className="text-blue-600 hover:underline">
