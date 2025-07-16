@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "../assets/supabaseClient";
+import { AlertTriangle, Wallet, CalendarCheck, RotateCcw } from "lucide-react";
+import supabase from "../lib/supabase";
 
 const Budgeting = () => {
   const [jumlah, setJumlah] = useState("");
