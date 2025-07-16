@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom"; // pastikan Link diimport
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "../../assets/supabaseClient";
 
 export default function Login() {
@@ -33,46 +33,51 @@ export default function Login() {
       .single();
 
     if (dbError) {
-      setError("Login berhasil, tapi gagal ambil data pengguna: " + dbError.message);
+      setError("Login berhasil, tetapi gagal mengambil data pengguna: " + dbError.message);
       return;
     }
 
     localStorage.setItem("user", JSON.stringify(userData));
     navigate("/main/Dashboard");
-
   };
 
   return (
-    <form onSubmit={handleLogin} className="max-w-sm mx-auto p-4 bg-white rounded shadow">
-      <h2 className="text-xl font-bold mb-4">Login</h2>
-      {error && <div className="text-red-600 mb-2">{error}</div>}
-      <input
-        type="email"
-        name="email"
-        placeholder="Email"
-        required
-        onChange={handleChange}
-        className="input input-bordered w-full mb-3"
-      />
-      <input
-        type="password"
-        name="password"
-        placeholder="Password"
-        required
-        onChange={handleChange}
-        className="input input-bordered w-full mb-3"
-      />
-      <button type="submit" className="btn btn-primary w-full">Login</button>
+    <form onSubmit={handleLogin} className="w-full max-w-sm mx-auto p-6 bg-white bg-opacity-80 backdrop-blur-md rounded-2xl shadow-lg">
+      <h2 className="text-2xl font-extrabold text-gray-800 mb-5 text-center">Masuk ke Finmo</h2>
 
-      {/* NOTE: Tambahan link di bawah */}
-      <div className="flex justify-between text-sm text-gray-600 mt-4">
-        <Link to="/forgot" className="hover:underline text-blue-600">
-          Lupa Password?
-        </Link>
-        <Link to="/register" className="hover:underline text-blue-600">
-          Daftar Akun
-        </Link>
+      {error && <div className="text-red-500 text-sm mb-4 text-center">{error}</div>}
+
+      <div className="space-y-4">
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          required
+          onChange={handleChange}
+          className="input input-bordered w-full"
+        />
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          required
+          onChange={handleChange}
+          className="input input-bordered w-full"
+        />
       </div>
+
+      <button
+        type="submit"
+        className="btn btn-primary w-full mt-6 hover:scale-[1.02] transition-transform"
+      >
+        Login
+      </button>
+
+      <div className="flex justify-between mt-4 text-sm text-gray-600">
+        <Link to="/forgot" className="hover:underline text-blue-600">Lupa Password?</Link>
+        <Link to="/register" className="hover:underline text-blue-600">Daftar Akun</Link>
+      </div>
+
     </form>
   );
 }

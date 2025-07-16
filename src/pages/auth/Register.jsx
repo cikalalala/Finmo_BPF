@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "../../assets/supabaseClient";
-
 
 export default function Register() {
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
@@ -33,7 +32,7 @@ export default function Register() {
       {
         name: formData.name,
         email: formData.email,
-        password: formData.password, // sebaiknya hash ini di backend!
+        password: formData.password, // disarankan hash di backend!
       },
     ]);
 
@@ -47,14 +46,15 @@ export default function Register() {
   };
 
   return (
-    <form onSubmit={handleRegister} className="max-w-sm mx-auto p-4 bg-white rounded shadow">
-      <h2 className="text-xl font-bold mb-4">Register</h2>
-      {error && <div className="text-red-600 mb-2">{error}</div>}
+    <form onSubmit={handleRegister} className="max-w-sm mx-auto p-6 bg-white bg-opacity-80 backdrop-blur-md rounded-2xl shadow-lg">
+      <h2 className="text-2xl font-extrabold text-gray-800 mb-5 text-center">Daftar Akun Finmo</h2>
+
+      {error && <div className="text-red-500 text-sm mb-4 text-center">{error}</div>}
 
       <input
         type="text"
         name="name"
-        placeholder="Full Name"
+        placeholder="Nama Lengkap"
         required
         onChange={handleChange}
         className="input input-bordered w-full mb-3"
@@ -75,7 +75,15 @@ export default function Register() {
         onChange={handleChange}
         className="input input-bordered w-full mb-3"
       />
-      <button type="submit" className="btn btn-primary w-full">Register</button>
+      <button type="submit" className="btn btn-primary w-full hover:scale-[1.02] transition-transform">Daftar</button>
+
+      {/* Sudah punya akun? */}
+      <p className="text-center text-sm text-gray-600 mt-4">
+        Sudah punya akun?{" "}
+        <Link to="/login" className="text-blue-600 hover:underline">
+          Masuk
+        </Link>
+      </p>
     </form>
   );
 }
