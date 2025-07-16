@@ -92,7 +92,9 @@ export default function Total() {
               <ArrowDownCircle className="w-6 h-6" />
               Total Pemasukan
             </div>
-            <div className="font-semibold">Rp {totalMasuk.toLocaleString()}</div>
+            <div className="font-semibold">
+              Rp {totalMasuk.toLocaleString()}
+            </div>
           </div>
 
           <div className="flex justify-between items-center bg-red-50 p-4 rounded-xl shadow-sm">
@@ -100,7 +102,9 @@ export default function Total() {
               <ArrowUpCircle className="w-6 h-6" />
               Total Pengeluaran
             </div>
-            <div className="font-semibold">Rp {totalKeluar.toLocaleString()}</div>
+            <div className="font-semibold">
+              Rp {totalKeluar.toLocaleString()}
+            </div>
           </div>
 
           <div className="border-t border-gray-200 my-2" />
@@ -108,12 +112,18 @@ export default function Total() {
           <div className="flex justify-between items-center bg-yellow-100 p-4 rounded-xl shadow-md text-xl font-bold">
             <div className="flex items-center gap-2 text-yellow-700">
               <RotateCcw className="w-6 h-6" />
-              Sisa Anggaran
+              Sisa
             </div>
             <div className={selisih >= 0 ? "text-green-700" : "text-red-700"}>
               Rp {selisih.toLocaleString()}
             </div>
           </div>
+          <button
+            onClick={() => navigate(-1)}
+            className="bg-gray-300 hover:bg-gray-400 text-black py-2 px-4 rounded-md transition duration-300"
+          >
+            Kembali
+          </button>
         </div>
       )}
     </div>
