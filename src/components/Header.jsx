@@ -41,7 +41,6 @@ export default function Header() {
         {/* Search, Notifikasi, dan Avatar */}
         <div className="relative flex items-center gap-6 text-white">
           <button className="hover:text-gray-300">
-            <FaSearch />
           </button>
 
           <Notifikasi />

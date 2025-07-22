@@ -5,8 +5,8 @@ import {
   FaArrowDown,
   FaClock,
   FaReceipt,
-  FaMoneyCheckAlt, // Icon baru untuk sisa limit
-  FaHandHoldingUsd, // Icon baru untuk uang terpakai
+  FaMoneyCheckAlt,
+  FaHandHoldingUsd,
 } from "react-icons/fa";
 import {
   LineChart,
@@ -97,18 +97,16 @@ export default function Dashboard() {
     }
   };
 
-  // Calculate totals
   const totalMasuk = pemasukan.reduce((sum, x) => sum + Number(x.jumlah), 0);
   const totalKeluar = pengeluaran.reduce((sum, x) => sum + Number(x.jumlah), 0);
 
-  // Budget calculations
   const limit = budgeting?.jumlah || 0;
   const durasiBudget = budgeting?.durasi_hari || 0;
   const tanggalMulaiBudget = budgeting?.tanggal_mulai ? new Date(budgeting.tanggal_mulai) : null;
   const hariIni = new Date();
 
   const sisaHari = Math.max(0, durasiBudget - Math.floor((hariIni - (tanggalMulaiBudget || hariIni)) / (1000 * 60 * 60 * 24)));
-  
+
   const pengeluaranSetelahBudgetDiset = pengeluaran.filter(item => {
     if (!tanggalMulaiBudget) return false;
     const tanggalPengeluaran = new Date(item.tanggal);
@@ -122,194 +120,91 @@ export default function Dashboard() {
   const saldoAkhir = totalPemasukan - totalKeluar;
 
   const statistikPengeluaranBudget = generateStatistikPengeluaran(pengeluaran, tanggalMulaiBudget);
+  const statistikKeuangan = generateStatistikKeuangan(pemasukan, pengeluaran, tanggalMulaiBudget);
+
+  // Hitung persentase pemakaian budget
+  const persenTerpakai = limit > 0 ? (pengeluaranSetelahBudgetDiset / limit) * 100 : 0;
+  let warnaPeringatan = "emerald";
+  if (persenTerpakai >= 75) {
+    warnaPeringatan = "rose";
+  } else if (persenTerpakai >= 50) {
+    warnaPeringatan = "amber";
+  }
 
   return (
-    <div className="bg-gray-50 text-gray-800 min-h-screen px-5 py-6 space-y-6">
+    <div className="bg-blue-50 text-gray-800 min-h-screen px-5 py-6 space-y-6">
       <PageHeader title={`Hi, ${userName}`} />
 
-      {/* Section: Tombol-tombol navigasi - MODIFIKASI UKURAN DI SINI */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full">
-        <button
-          onClick={() => navigate("/main/Dashboard/Budgeting")}
-          // Perubahan: py-5 untuk padding vertikal lebih besar, text-lg untuk ukuran teks
-          className="w-full py-5 px-4 bg-indigo-600 text-white rounded-xl font-semibold shadow-md hover:brightness-110 transition duration-200 text-lg" 
-        >
-          = Budgeting
-        </button>
-        <button
-          onClick={() => navigate("/main/Dashboard/Pemasukan")}
-          // Perubahan: py-5 untuk padding vertikal lebih besar, text-lg untuk ukuran teks
-          className="w-full py-5 px-4 bg-emerald-600 text-white rounded-xl font-semibold shadow-md hover:brightness-110 transition duration-200 text-lg"
-        >
-          + Income
-        </button>
-        <button
-          onClick={() => navigate("/main/Dashboard/Pengeluaran")}
-          // Perubahan: py-5 untuk padding vertikal lebih besar, text-lg untuk ukuran teks
-          className="w-full py-5 px-4 bg-rose-600 text-white rounded-xl font-semibold shadow-md hover:brightness-110 transition duration-200 text-lg"
-        >
-          - Expense
-        </button>
-        <button
-          onClick={() => navigate("/main/Dashboard/Total")}
-          // Perubahan: py-5 untuk padding vertikal lebih besar, text-lg untuk ukuran teks
-          className="w-full py-5 px-4 bg-purple-600 text-white rounded-xl font-semibold shadow-md hover:brightness-110 transition duration-200 text-lg"
-        >
-          = Total
-        </button>
+        <button onClick={() => navigate("/main/Dashboard/Budgeting")} className="w-full py-5 px-4 bg-indigo-600 text-white rounded-xl font-semibold shadow-md hover:brightness-110 transition duration-200 text-lg">= Budgeting</button>
+        <button onClick={() => navigate("/main/Dashboard/Pemasukan")} className="w-full py-5 px-4 bg-emerald-600 text-white rounded-xl font-semibold shadow-md hover:brightness-110 transition duration-200 text-lg">+ Income</button>
+        <button onClick={() => navigate("/main/Dashboard/Pengeluaran")} className="w-full py-5 px-4 bg-rose-600 text-white rounded-xl font-semibold shadow-md hover:brightness-110 transition duration-200 text-lg">- Expense</button>
+        <button onClick={() => navigate("/main/Dashboard/Total")} className="w-full py-5 px-4 bg-purple-600 text-white rounded-xl font-semibold shadow-md hover:brightness-110 transition duration-200 text-lg">= Total</button>
       </div>
 
-      {/* Pembungkus Utama untuk Kolom Kiri dan Kanan */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        
-        {/* KOLOM KIRI */}
         <div>
-          {/* Bagian Summary Cards "KIRI" */}
           <div className="grid sm:grid-cols-2 md:grid-cols-2 gap-4 mb-6">
-            <SummaryCard
-              icon={<FaWallet />}
-              color="emerald"
-              title={`Rp ${limit.toLocaleString("id-ID")}`}
-              subtitle="Budget Limit"
-            />
-            <SummaryCard
-              icon={<FaClock />}
-              color="sky"
-              title={`${sisaHari} days`}
-              subtitle={`of ${durasiBudget} days`}
-            />
-            <SummaryCard
-              icon={<FaMoneyCheckAlt />}
-              color={sisaLimit >= 0 ? "emerald" : "rose"}
-              title={`Rp ${Math.abs(sisaLimit).toLocaleString("id-ID")}`}
-              subtitle={sisaLimit >= 0 ? "Sisa Limit" : "Over Budget"}
-            />
-            <SummaryCard
-              icon={<FaHandHoldingUsd />}
-              color="amber"
-              title={`Rp ${pengeluaranSetelahBudgetDiset.toLocaleString("id-ID")}`}
-              subtitle="Uang Terpakai"
-            />
+            <SummaryCard icon={<FaWallet />} color="emerald" title={`Rp ${limit.toLocaleString("id-ID")}`} subtitle="Budget Limit" />
+            <SummaryCard icon={<FaClock />} color="sky" title={`${sisaHari} days`} subtitle={`of ${durasiBudget} days`} />
+            <SummaryCard icon={<FaMoneyCheckAlt />} color={sisaLimit >= 0 ? "emerald" : "rose"} title={`Rp ${Math.abs(sisaLimit).toLocaleString("id-ID")}`} subtitle={sisaLimit >= 0 ? "Sisa Limit" : "Over Budget"} />
+            <SummaryCard icon={<FaHandHoldingUsd />} color="amber" title={`Rp ${pengeluaranSetelahBudgetDiset.toLocaleString("id-ID")}`} subtitle="Uang Terpakai" />
           </div>
 
-          {/* Charts (Line Chart) "KIRI" */}
+          {persenTerpakai >= 50 && (
+            <div className={`p-4 mb-4 rounded-md shadow-md text-white ${warnaPeringatan === "rose" ? "bg-rose-500" : "bg-amber-400"}`}>
+              <strong>Warning:</strong> Budget telah terpakai {persenTerpakai.toFixed(2)}%
+            </div>
+          )}
+
           <div className="card bg-white shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-4 text-gray-800">
-              Financial Statistics (Budget Period)
-            </h2>
-            {statistikPengeluaranBudget.length === 0 ? (
-              <p className="text-center text-sm text-gray-500">
-                No expense data available for the current budget period.
-              </p>
+            <h2 className="text-xl font-semibold mb-4 text-gray-800">Income & Expense Chart</h2>
+            {statistikKeuangan.length === 0 ? (
+              <p className="text-center text-sm text-gray-500">No financial data available.</p>
             ) : (
               <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={statistikPengeluaranBudget}>
+                <LineChart data={statistikKeuangan}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                  <XAxis
-                    dataKey="bulan"
-                    tickFormatter={(tick) => {
-                      const [year, month] = tick.split("-");
-                      const date = new Date(year, month - 1);
-                      return date.toLocaleString("en-US", {
-                        month: "short",
-                        year: "2-digit",
-                      });
-                    }}
-                  />
-                  <YAxis
-                    tickFormatter={(tick) => {
-                        if (Math.abs(tick) >= 1_000_000) {
-                            return `${ (tick / 1_000_000).toLocaleString("id-ID", { maximumFractionDigits: 1 })} JT`;
-                        }
-                        if (Math.abs(tick) >= 1_000) {
-                            return `${ (tick / 1_000).toLocaleString("id-ID", { maximumFractionDigits: 1 })} RB`;
-                        }
-                        return `${Number(tick).toLocaleString("id-ID")}`;
-                    }}
-                    interval="preserveStartEnd"
-                  />
-                  <Tooltip
-                    formatter={(val) =>
-                      `Rp ${Number(val).toLocaleString("id-ID")}`
-                    }
-                  />
+                  <XAxis dataKey="bulan" tickFormatter={(tick) => {
+                    const [year, month] = tick.split("-");
+                    const date = new Date(year, month - 1);
+                    return date.toLocaleString("en-US", { month: "short", year: "2-digit" });
+                  }} />
+                  <YAxis tickFormatter={(tick) => {
+                    if (Math.abs(tick) >= 1_000_000) return `${(tick / 1_000_000).toFixed(1)} JT`;
+                    if (Math.abs(tick) >= 1_000) return `${(tick / 1_000).toFixed(1)} RB`;
+                    return tick;
+                  }} />
+                  <Tooltip formatter={(val) => `Rp ${Number(val).toLocaleString("id-ID")}`} />
                   <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="Expense"
-                    stroke={COLORS[1]}
-                    strokeWidth={2}
-                    activeDot={{ r: 8 }}
-                  />
+                  <Line type="monotone" dataKey="Income" stroke="#28a745" strokeWidth={2} />
+                  <Line type="monotone" dataKey="Expense" stroke="#dc3545" strokeWidth={2} />
                 </LineChart>
               </ResponsiveContainer>
             )}
           </div>
         </div>
 
-        {/* KOLOM KANAN */}
         <div>
-          {/* Bagian Summary Cards "KANAN" */}
           <div className="grid sm:grid-cols-2 md:grid-cols-2 gap-4 mb-6">
-            <SummaryCard
-              icon={<FaArrowUp />}
-              color="emerald"
-              title={`Rp ${totalPemasukan.toLocaleString("id-ID")}`}
-              subtitle="Total Income"
-            />
-            <SummaryCard
-              icon={<FaArrowDown />}
-              color="rose"
-              title={`Rp ${totalKeluar.toLocaleString("id-ID")}`}
-              subtitle="Total Expenses"
-            />
-            <SummaryCard
-              icon={<FaReceipt />}
-              color="sky"
-              title={`${totalTransaksi}`}
-              subtitle="Transactions"
-            />
-            <SummaryCard
-              icon={<FaMoneyBillWave />}
-              color={saldoAkhir >= 0 ? "emerald" : "rose"}
-              title={`Rp ${Math.abs(saldoAkhir).toLocaleString("id-ID")}`}
-              subtitle={saldoAkhir >= 0 ? "Remaining" : "Deficit"}
-            />
+            <SummaryCard icon={<FaArrowUp />} color="emerald" title={`Rp ${totalPemasukan.toLocaleString("id-ID")}`} subtitle="Total Income" />
+            <SummaryCard icon={<FaArrowDown />} color="rose" title={`Rp ${totalKeluar.toLocaleString("id-ID")}`} subtitle="Total Expenses" />
+            <SummaryCard icon={<FaReceipt />} color="sky" title={`${totalTransaksi}`} subtitle="Transactions" />
+            <SummaryCard icon={<FaMoneyBillWave />} color={saldoAkhir >= 0 ? "emerald" : "rose"} title={`Rp ${Math.abs(saldoAkhir).toLocaleString("id-ID")}`} subtitle={saldoAkhir >= 0 ? "Remaining" : "Deficit"} />
           </div>
 
-          {/* Pie Chart "KANAN" */}
           <div className="card bg-white shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-4 text-gray-800">
-              Financial Distribution
-            </h2>
+            <h2 className="text-xl font-semibold mb-4 text-gray-800">Financial Distribution</h2>
             {totalMasuk === 0 && totalKeluar === 0 ? (
-              <p className="text-center text-sm text-gray-500">
-                No data available.
-              </p>
+              <p className="text-center text-sm text-gray-500">No data available.</p>
             ) : (
               <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
-                  <Pie
-                    data={[
-                      { name: "Income", value: totalMasuk },
-                      { name: "Expense", value: totalKeluar },
-                    ]}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    innerRadius={60}
-                    animationBegin={0}
-                    animationDuration={800}
-                    animationEasing="ease-out"
-                  >
+                  <Pie data={[{ name: "Income", value: totalMasuk }, { name: "Expense", value: totalKeluar }]} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} innerRadius={60}>
                     <Cell key="income" fill={COLORS[0]} />
                     <Cell key="expense" fill={COLORS[1]} />
                   </Pie>
-                  <Tooltip
-                    formatter={(value) => `Rp ${value.toLocaleString("id-ID")}`}
-                  />
+                  <Tooltip formatter={(value) => `Rp ${value.toLocaleString("id-ID")}`} />
                   <Legend align="center" verticalAlign="bottom" />
                 </PieChart>
               </ResponsiveContainer>
@@ -322,7 +217,6 @@ export default function Dashboard() {
   );
 }
 
-// Helper components
 function PageHeader({ title, children }) {
   return (
     <div className="flex justify-between items-center mb-6">
@@ -358,28 +252,49 @@ function SummaryCard({ icon, color, title, subtitle }) {
 
 function generateStatistikPengeluaran(pengeluaranData, tanggalMulaiBudget) {
   const stats = {};
-
-  const filteredPengeluaran = pengeluaranData.filter(item => {
+  const filtered = pengeluaranData.filter(item => {
     if (!tanggalMulaiBudget) return false;
-    const tanggalPengeluaran = new Date(item.tanggal);
-    return tanggalPengeluaran >= tanggalMulaiBudget;
+    const date = new Date(item.tanggal);
+    return date >= tanggalMulaiBudget;
   });
 
-  filteredPengeluaran.forEach((item) => {
+  filtered.forEach(item => {
     const date = new Date(item.tanggal);
-    if (isNaN(date)) return;
-
-    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-      2,
-      "0"
-    )}`;
-
-    if (!stats[key]) {
-      stats[key] = { bulan: key, Expense: 0 };
-    }
-
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    if (!stats[key]) stats[key] = { bulan: key, Expense: 0 };
     stats[key].Expense += Number(item.jumlah);
   });
 
-  return Object.values(stats).filter((item) => item.Expense > 0);
+  return Object.values(stats);
+}
+
+function generateStatistikKeuangan(pemasukanData, pengeluaranData, tanggalMulaiBudget) {
+  const stats = {};
+  const pemasukanFilter = pemasukanData.filter(item => {
+    if (!tanggalMulaiBudget) return false;
+    const date = new Date(item.tanggal);
+    return date >= tanggalMulaiBudget;
+  });
+
+  const pengeluaranFilter = pengeluaranData.filter(item => {
+    if (!tanggalMulaiBudget) return false;
+    const date = new Date(item.tanggal);
+    return date >= tanggalMulaiBudget;
+  });
+
+  pemasukanFilter.forEach(item => {
+    const date = new Date(item.tanggal);
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    if (!stats[key]) stats[key] = { bulan: key, Income: 0, Expense: 0 };
+    stats[key].Income += Number(item.jumlah);
+  });
+
+  pengeluaranFilter.forEach(item => {
+    const date = new Date(item.tanggal);
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    if (!stats[key]) stats[key] = { bulan: key, Income: 0, Expense: 0 };
+    stats[key].Expense += Number(item.jumlah);
+  });
+
+  return Object.values(stats);
 }
