@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { ImSpinner2 } from "react-icons/im";
+import { ImSpinner2 as FaSpinner } from "react-icons/im"; // Menggunakan FaSpinner untuk loading
 import {
   FiGift,
   FiBriefcase,
@@ -10,14 +9,14 @@ import {
 } from "react-icons/fi";
 import { supabase } from "../assets/supabaseClient";
 
-export default function Pemasukan() {
+// Menerima prop 'onClose' dari Dashboard
+export default function Pemasukan({ onClose }) {
   const [kategoriDipilih, setKategoriDipilih] = useState("");
   const [jumlah, setJumlah] = useState("");
   const [deskripsi, setDeskripsi] = useState("");
-  const [tanggal, setTanggal] = useState(""); // Ini tetap untuk input type="date"
+  const [tanggal, setTanggal] = useState("");
   const [loading, setLoading] = useState(false);
-  const [userId, setUserId] = useState(null);
-  const navigate = useNavigate();
+  const [userId, setUserId] = useState(null); // userId dipertahankan sebagai state lokal
 
   const daftarKategori = [
     { nama: "Gaji", icon: <FiBriefcase className="text-2xl mb-1" /> },
@@ -28,13 +27,22 @@ export default function Pemasukan() {
   ];
 
   useEffect(() => {
+    // Set tanggal default ke tanggal hari ini saat komponen dimuat
+    const today = new Date();
+    const formattedDate = today.toISOString().split('T')[0]; // Format YYYY-MM-DD
+    setTanggal(formattedDate);
+
+    // --- Logika pengambilan userId dikembalikan ---
     const fetchUser = async () => {
+      setLoading(true); // Mulai loading untuk fetch user
       const { data: authData, error: authError } =
         await supabase.auth.getUser();
 
-      if (authError) {
-        console.error("Auth error:", authError.message);
-        navigate("/login");
+      if (authError || !authData?.user) {
+        console.error("Auth error in Pemasukan:", authError?.message || "User not found");
+        alert("Autentikasi gagal. Silakan login ulang atau refresh halaman.");
+        onClose(); // Tutup modal jika autentikasi gagal
+        setLoading(false);
         return;
       }
 
@@ -45,27 +53,29 @@ export default function Pemasukan() {
           .eq("email", authData.user.email)
           .single();
 
-        if (userError) {
-          console.error("User table error:", userError.message);
-          alert("Pengguna tidak ditemukan di tabel 'users'.");
-          navigate("/login"); // Redirect jika user tidak ditemukan
+        if (userError || !userRow) {
+          console.error("User table error in Pemasukan:", userError?.message || "User not found in DB");
+          alert("Pengguna tidak ditemukan di tabel 'users'. Silakan login ulang.");
+          onClose(); // Tutup modal jika user tidak ditemukan
         } else {
           setUserId(userRow.id);
         }
       } else {
-        navigate("/login"); // Redirect jika tidak ada user
+        alert("Sesi pengguna tidak lengkap. Silakan login ulang.");
+        onClose(); // Tutup modal jika tidak ada user email
       }
+      setLoading(false); // Akhiri loading setelah fetch user
     };
 
     fetchUser();
-  }, [navigate]);
+  }, [onClose]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setLoading(true); // Mulai loading saat submit
 
     if (!userId) {
-      alert("Gagal mendapatkan ID pengguna.");
+      alert("Gagal mendapatkan ID pengguna. Silakan tunggu atau coba refresh halaman.");
       setLoading(false);
       return;
     }
@@ -76,7 +86,6 @@ export default function Pemasukan() {
       return;
     }
 
-    // Pastikan jumlah adalah angka yang valid dan positif
     const parsedJumlah = parseFloat(jumlah);
     if (isNaN(parsedJumlah) || parsedJumlah <= 0) {
       alert("Jumlah harus angka positif.");
@@ -85,33 +94,46 @@ export default function Pemasukan() {
     }
 
     try {
+      // Menggabungkan tanggal dari input dengan waktu saat ini
+      const inputDate = new Date(tanggal);
+      const now = new Date();
+      inputDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+      const finalTanggal = inputDate.toISOString();
+
       const { error } = await supabase.from("pemasukan").insert([
         {
           id_pengguna: userId,
           kategori: kategoriDipilih,
           jumlah: parsedJumlah,
           deskripsi,
-          // <<< PERUBAHAN DI SINI: Simpan waktu saat ini untuk pemasukan >>>
-          tanggal: new Date().toISOString(), // Menggunakan waktu submit form
+          tanggal: finalTanggal,
         },
       ]);
-
-      setLoading(false);
 
       if (error) {
         alert("Gagal menyimpan pemasukan: " + error.message);
       } else {
         alert("Pemasukan berhasil ditambahkan!");
-        navigate("/main/Dashboard");
+        onClose(); // Tutup modal dan picu refresh di Dashboard
       }
     } catch (err) {
-      setLoading(false);
       alert("Terjadi kesalahan: " + err.message);
+    } finally {
+      setLoading(false); // Akhiri loading
     }
   };
 
+  if (loading && !userId) { // Tampilkan spinner awal jika userId belum didapatkan
+    return (
+      <div className="flex items-center justify-center p-8">
+        <FaSpinner className="animate-spin text-4xl mr-3 text-green-500" />
+        Memuat data pengguna...
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-2xl mx-auto mt-10 bg-white p-8 rounded-2xl shadow-lg">
+    <div className="bg-white p-8 rounded-2xl shadow-lg">
       <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
         Tambah Pemasukan
       </h2>
@@ -123,17 +145,13 @@ export default function Pemasukan() {
               key={kategori.nama}
               onClick={() => setKategoriDipilih(kategori.nama)}
               className="flex flex-col items-center justify-center py-4 px-2 bg-green-100 text-green-700 rounded-xl hover:bg-green-200 transition"
+              disabled={loading}
             >
               {kategori.icon}
               <span className="text-sm">{kategori.nama}</span>
             </button>
           ))}
-          <button
-            onClick={() => navigate(-1)}
-            className="bg-gray-300 hover:bg-gray-400 text-black py-2 px-4 rounded-md transition duration-300"
-          >
-            Kembali
-          </button>
+
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4 mt-6">
@@ -143,6 +161,7 @@ export default function Pemasukan() {
               type="button"
               className="text-red-500 ml-2 text-xs underline"
               onClick={() => setKategoriDipilih("")}
+              disabled={loading}
             >
               Ganti
             </button>
@@ -160,6 +179,7 @@ export default function Pemasukan() {
               onChange={(e) => setJumlah(e.target.value)}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500"
               placeholder="Contoh: 100000"
+              disabled={loading}
             />
           </div>
 
@@ -174,6 +194,7 @@ export default function Pemasukan() {
               onChange={(e) => setDeskripsi(e.target.value)}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500"
               placeholder="Contoh: Bonus proyek"
+              disabled={loading}
             />
           </div>
 
@@ -187,15 +208,20 @@ export default function Pemasukan() {
               value={tanggal}
               onChange={(e) => setTanggal(e.target.value)}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500"
+              disabled={loading}
             />
           </div>
 
           <button
             type="submit"
-            disabled={loading}
-            className="w-full flex items-center justify-center bg-green-600 text-white font-semibold py-2 rounded-md hover:bg-green-700 transition"
+            disabled={loading || !kategoriDipilih || !jumlah || !deskripsi || !tanggal} // Disable jika data belum lengkap
+            className={`w-full flex items-center justify-center font-semibold py-2 rounded-md transition ${
+              loading || !kategoriDipilih || !jumlah || !deskripsi || !tanggal
+                ? "bg-green-300 cursor-not-allowed text-white"
+                : "bg-green-600 hover:bg-green-700 text-white"
+            }`}
           >
-            {loading && <ImSpinner2 className="animate-spin mr-2" />}
+            {loading && <FaSpinner className="animate-spin mr-2" />}
             Simpan
           </button>
         </form>
