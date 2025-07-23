@@ -23,36 +23,30 @@ import {
   Legend,
 } from "recharts";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState, useCallback } from "react"; // Tambahkan useCallback
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "../assets/supabaseClient";
 
-// Import komponen Modal yang baru kita buat
-import Modal from "../components/Modal"; // Pastikan path ini benar!
-
-// Import komponen-komponen yang akan jadi isi modal
-import Budgeting from "./Budgeting"; // Pastikan path ini benar!
-import Pemasukan from "./Pemasukan"; // Pastikan path ini benar!
-import Pengeluaran from "./Pengeluaran"; // Pastikan path ini benar!
+import Modal from "../components/Modal";
+import Budgeting from "./Budgeting";
+import Pemasukan from "./Pemasukan";
+import Pengeluaran from "./Pengeluaran";
 
 const COLORS = ["#28a745", "#dc3545"]; // Hijau & Merah
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [userName, setUserName] = useState("User");
-  const [userId, setUserId] = useState(null); // userId tetap dipertahankan di Dashboard
+  const [userId, setUserId] = useState(null);
   const [pemasukan, setPemasukan] = useState([]);
   const [pengeluaran, setPengeluaran] = useState([]);
   const [budgeting, setBudgeting] = useState(null);
-  const [loadingDashboard, setLoadingDashboard] = useState(true); // State loading untuk dashboard utama
+  const [loadingDashboard, setLoadingDashboard] = useState(true);
 
-  // --- State Baru untuk Modal ---
   const [showModal, setShowModal] = useState(false);
-  const [modalType, setModalType] = useState(null); // 'budgeting', 'income', 'expense'
-  // --- Akhir State Baru ---
+  const [modalType, setModalType] = useState(null);
 
-  // Refetch data function, dijadikan useCallback agar tidak dibuat ulang setiap render
   const fetchData = useCallback(async (currentUserId) => {
-    if (!currentUserId) return; // Pastikan userId ada sebelum fetch
+    if (!currentUserId) return;
 
     const { data: dataMasuk, error: errorMasuk } = await supabase
       .from("pemasukan")
@@ -70,10 +64,10 @@ export default function Dashboard() {
 
     setPemasukan(dataMasuk || []);
     setPengeluaran(dataKeluar || []);
-  }, []); // Dependensi kosong karena currentUserId akan diberikan saat dipanggil
+  }, []);
 
   const fetchBudget = useCallback(async (currentUserId) => {
-    if (!currentUserId) return; // Pastikan userId ada sebelum fetch
+    if (!currentUserId) return;
 
     const { data, error } = await supabase
       .from("budgeting")
@@ -81,9 +75,9 @@ export default function Dashboard() {
       .eq("user_id", currentUserId)
       .order("created_at", { ascending: false })
       .limit(1)
-      .single(); // Gunakan single() jika hanya berharap 1 hasil
+      .single();
 
-    if (error && error.code !== 'PGRST116') { // PGRST116: No rows found
+    if (error && error.code !== 'PGRST116') { // PGRST116 = No rows found
       console.error("Error fetching budget:", error.message);
       setBudgeting(null);
     } else if (data) {
@@ -119,16 +113,16 @@ export default function Dashboard() {
       }
 
       setUserName(userRow.name || "User");
-      setUserId(userRow.id); // Set userId di state Dashboard
-      await fetchData(userRow.id); // Panggil dengan userId yang baru didapat
-      await fetchBudget(userRow.id); // Panggil dengan userId yang baru didapat
+      setUserId(userRow.id);
+      await fetchData(userRow.id);
+      await fetchBudget(userRow.id);
       setLoadingDashboard(false);
     };
 
     fetchUserAndData();
-  }, [navigate, fetchData, fetchBudget]); // Tambahkan fetchData dan fetchBudget sebagai dependensi
+  }, [navigate, fetchData, fetchBudget]);
 
-  // --- Fungsi Baru untuk Modal ---
+
   const handleOpenModal = (type) => {
     setModalType(type);
     setShowModal(true);
@@ -136,17 +130,14 @@ export default function Dashboard() {
 
   const handleCloseModal = () => {
     setShowModal(false);
-    setModalType(null); // Reset tipe modal saat ditutup
-    // Optional: Refresh data dashboard setelah modal ditutup jika ada perubahan
+    setModalType(null);
     if (userId) {
-      fetchData(userId);
-      fetchBudget(userId);
+      fetchData(userId); // Refresh data pemasukan dan pengeluaran
+      fetchBudget(userId); // Refresh data budgeting
     }
   };
 
-  // Fungsi untuk mendapatkan konten modal berdasarkan modalType
   const getModalContent = () => {
-    // PASTIKAN TERUSKAN onClose={handleCloseModal} DI SINI!
     switch (modalType) {
       case 'budgeting':
         return <Budgeting onClose={handleCloseModal} />;
@@ -159,7 +150,6 @@ export default function Dashboard() {
     }
   };
 
-  // Fungsi untuk mendapatkan judul modal
   const getModalTitle = () => {
     switch (modalType) {
       case 'budgeting':
@@ -172,7 +162,6 @@ export default function Dashboard() {
         return 'Detail';
     }
   };
-  // --- Akhir Fungsi Baru ---
 
   const totalMasuk = pemasukan.reduce((sum, x) => sum + Number(x.jumlah), 0);
   const totalKeluar = pengeluaran.reduce((sum, x) => sum + Number(x.jumlah), 0);
@@ -182,25 +171,33 @@ export default function Dashboard() {
   const tanggalMulaiBudget = budgeting?.tanggal_mulai ? new Date(budgeting.tanggal_mulai) : null;
   const hariIni = new Date();
 
-  const sisaHari = Math.max(0, durasiBudget - Math.floor((hariIni - (tanggalMulaiBudget || hariIni)) / (1000 * 60 * 60 * 24)));
+  // Menghitung sisa hari
+  let sisaHari = 0;
+  if (tanggalMulaiBudget && durasiBudget > 0) {
+    const tanggalAkhirBudget = new Date(tanggalMulaiBudget);
+    tanggalAkhirBudget.setDate(tanggalMulaiBudget.getDate() + durasiBudget);
+    const diffTime = tanggalAkhirBudget.getTime() - hariIni.getTime();
+    sisaHari = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    if (sisaHari < 0) sisaHari = 0; // Pastikan tidak negatif jika sudah lewat
+  }
 
   const pengeluaranSetelahBudgetDiset = pengeluaran.filter(item => {
     if (!tanggalMulaiBudget) return false;
     const tanggalPengeluaran = new Date(item.tanggal);
-    // Filter pengeluaran yang terjadi setelah tanggal mulai budget
-    return tanggalPengeluaran >= tanggalMulaiBudget;
+    // Pastikan tanggal pengeluaran berada dalam periode budget
+    const tanggalAkhirBudget = new Date(tanggalMulaiBudget);
+    tanggalAkhirBudget.setDate(tanggalMulaiBudget.getDate() + durasiBudget);
+    return tanggalPengeluaran >= tanggalMulaiBudget && tanggalPengeluaran <= tanggalAkhirBudget;
   }).reduce((sum, x) => sum + Number(x.jumlah), 0);
 
   const sisaLimit = limit - pengeluaranSetelahBudgetDiset;
 
   const totalPemasukan = totalMasuk;
-  const totalTransaksi = pengeluaran.length + pemasukan.length; // Total transaksi adalah pemasukan + pengeluaran
+  const totalTransaksi = pengeluaran.length + pemasukan.length;
   const saldoAkhir = totalPemasukan - totalKeluar;
 
-  const statistikPengeluaranBudget = generateStatistikPengeluaran(pengeluaran, tanggalMulaiBudget);
   const statistikKeuangan = generateStatistikKeuangan(pemasukan, pengeluaran, tanggalMulaiBudget);
 
-  // Hitung persentase pemakaian budget
   const persenTerpakai = limit > 0 ? (pengeluaranSetelahBudgetDiset / limit) * 100 : 0;
   let warnaPeringatan = "emerald";
   if (persenTerpakai >= 75) {
@@ -212,7 +209,7 @@ export default function Dashboard() {
   if (loadingDashboard) {
     return (
       <div className="flex items-center justify-center min-h-screen text-gray-600">
-        <FaSpinnerer className="animate-spin text-4xl mr-3" /> {/* Menggunakan FaSpinner dari react-icons/fa */}
+        <FaSpinnerer className="animate-spin text-4xl mr-3" />
         Memuat data dashboard...
       </div>
     );
@@ -220,28 +217,22 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Header with gradient background */}
       <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 text-white px-6 py-8 shadow-lg">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
           <PageHeader title={`Hi, ${userName} 👋`} />
+          {/* Tidak ada lagi tombol notifikasi */}
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-        {/* Action Buttons with improved styling */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Ubah onClick untuk membuka modal */}
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
           <button onClick={() => handleOpenModal('budgeting')} className="w-full py-4 px-6 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 text-base">= Budgeting</button>
           <button onClick={() => handleOpenModal('income')} className="w-full py-4 px-6 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 text-base">+ Income</button>
           <button onClick={() => handleOpenModal('expense')} className="w-full py-4 px-6 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 text-base">- Expense</button>
-          {/* Tombol Total tetap menggunakan navigate, atau bisa juga jadi modal jika Anda mau */}
-          <button onClick={() => navigate("/main/Dashboard/Total")} className="w-full py-4 px-6 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 text-base">= Total</button>
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-          {/* Left Column - Budget Section */}
           <div className="space-y-6">
-            {/* Budget Cards */}
             <div className="grid grid-cols-2 gap-4">
               <SummaryCard
                 icon={<FaWallet />}
@@ -269,7 +260,6 @@ export default function Dashboard() {
               />
             </div>
 
-            {/* Warning Alert */}
             {persenTerpakai >= 50 && (
               <div className={`p-5 rounded-xl shadow-lg text-white backdrop-blur-sm border border-white/20 ${
                   warnaPeringatan === "rose"
@@ -290,7 +280,6 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* Chart Card */}
             <ChartCard title="Income & Expense Trends" icon="📈">
               {statistikKeuangan.length === 0 ? (
                 <EmptyState message="Atur Uang dengan Durasi!" />
@@ -345,9 +334,7 @@ export default function Dashboard() {
             </ChartCard>
           </div>
 
-          {/* Right Column - Financial Overview */}
           <div className="space-y-6">
-            {/* Financial Summary Cards */}
             <div className="grid grid-cols-2 gap-4">
               <SummaryCard
                 icon={<FaArrowUp />}
@@ -375,7 +362,6 @@ export default function Dashboard() {
               />
             </div>
 
-            {/* Pie Chart Card */}
             <ChartCard title="Financial Distribution" icon="📊">
               {totalMasuk === 0 && totalKeluar === 0 ? (
                 <EmptyState message="No data available." />
@@ -401,7 +387,7 @@ export default function Dashboard() {
                     <Tooltip
                       formatter={(value) => [`Rp ${value.toLocaleString("id-ID")}`, ""]}
                       contentStyle={{
-                        backgroundColor: '#1f2937',
+                        backgroundColor: '#00000002',
                         border: 'none',
                         borderRadius: '8px',
                         color: 'white'
@@ -415,9 +401,7 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-      {/* <Outlet /> <-- Hapus baris ini */}
 
-      {/* --- Komponen Modal Ditambahkan di Sini --- */}
       <Modal
         show={showModal}
         onClose={handleCloseModal}
@@ -425,7 +409,6 @@ export default function Dashboard() {
       >
         {getModalContent()}
       </Modal>
-      {/* --- Akhir Komponen Modal --- */}
 
     </div>
   );
@@ -487,6 +470,7 @@ function EmptyState({ message }) {
   );
 }
 
+// Fungsi ini tidak digunakan di Dashboard yang baru, tapi saya biarkan untuk kelengkapan
 function generateStatistikPengeluaran(pengeluaranData, tanggalMulaiBudget) {
   const stats = {};
   const filtered = pengeluaranData.filter(item => {
@@ -508,13 +492,13 @@ function generateStatistikPengeluaran(pengeluaranData, tanggalMulaiBudget) {
 function generateStatistikKeuangan(pemasukanData, pengeluaranData, tanggalMulaiBudget) {
   const stats = {};
   const pemasukanFilter = pemasukanData.filter(item => {
-    if (!tanggalMulaiBudget) return false;
+    if (!tanggalMulaiBudget) return true; // Tidak perlu filter berdasarkan tanggal budget jika tidak ada
     const date = new Date(item.tanggal);
     return date >= tanggalMulaiBudget;
   });
 
   const pengeluaranFilter = pengeluaranData.filter(item => {
-    if (!tanggalMulaiBudget) return false;
+    if (!tanggalMulaiBudget) return true; // Tidak perlu filter berdasarkan tanggal budget jika tidak ada
     const date = new Date(item.tanggal);
     return date >= tanggalMulaiBudget;
   });
@@ -533,5 +517,10 @@ function generateStatistikKeuangan(pemasukanData, pengeluaranData, tanggalMulaiB
     stats[key].Expense += Number(item.jumlah);
   });
 
-  return Object.values(stats);
+  // Urutkan data berdasarkan bulan
+  const sortedStats = Object.values(stats).sort((a, b) => {
+    return new Date(a.bulan) - new Date(b.bulan);
+  });
+
+  return sortedStats;
 }

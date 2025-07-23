@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ImSpinner2 as FaSpinner } from "react-icons/im"; // Menggunakan FaSpinner untuk loading
+import { ImSpinner2 as FaSpinner } from "react-icons/im";
 import {
   FiGift,
   FiBriefcase,
@@ -9,14 +9,13 @@ import {
 } from "react-icons/fi";
 import { supabase } from "../assets/supabaseClient";
 
-// Menerima prop 'onClose' dari Dashboard
-export default function Pemasukan({ onClose }) {
+export default function Pemasukan({ onClose }) { // Pastikan onClose diterima di sini
   const [kategoriDipilih, setKategoriDipilih] = useState("");
   const [jumlah, setJumlah] = useState("");
   const [deskripsi, setDeskripsi] = useState("");
   const [tanggal, setTanggal] = useState("");
   const [loading, setLoading] = useState(false);
-  const [userId, setUserId] = useState(null); // userId dipertahankan sebagai state lokal
+  const [userId, setUserId] = useState(null);
 
   const daftarKategori = [
     { nama: "Gaji", icon: <FiBriefcase className="text-2xl mb-1" /> },
@@ -27,21 +26,20 @@ export default function Pemasukan({ onClose }) {
   ];
 
   useEffect(() => {
-    // Set tanggal default ke tanggal hari ini saat komponen dimuat
     const today = new Date();
-    const formattedDate = today.toISOString().split('T')[0]; // Format YYYY-MM-DD
+    const formattedDate = today.toISOString().split('T')[0];
     setTanggal(formattedDate);
 
-    // --- Logika pengambilan userId dikembalikan ---
     const fetchUser = async () => {
-      setLoading(true); // Mulai loading untuk fetch user
-      const { data: authData, error: authError } =
-        await supabase.auth.getUser();
+      setLoading(true);
+      const { data: authData, error: authError } = await supabase.auth.getUser();
 
       if (authError || !authData?.user) {
         console.error("Auth error in Pemasukan:", authError?.message || "User not found");
         alert("Autentikasi gagal. Silakan login ulang atau refresh halaman.");
-        onClose(); // Tutup modal jika autentikasi gagal
+        if (onClose && typeof onClose === 'function') { // Pastikan onClose adalah fungsi
+          onClose();
+        }
         setLoading(false);
         return;
       }
@@ -56,23 +54,27 @@ export default function Pemasukan({ onClose }) {
         if (userError || !userRow) {
           console.error("User table error in Pemasukan:", userError?.message || "User not found in DB");
           alert("Pengguna tidak ditemukan di tabel 'users'. Silakan login ulang.");
-          onClose(); // Tutup modal jika user tidak ditemukan
+          if (onClose && typeof onClose === 'function') { // Pastikan onClose adalah fungsi
+            onClose();
+          }
         } else {
           setUserId(userRow.id);
         }
       } else {
         alert("Sesi pengguna tidak lengkap. Silakan login ulang.");
-        onClose(); // Tutup modal jika tidak ada user email
+        if (onClose && typeof onClose === 'function') { // Pastikan onClose adalah fungsi
+          onClose();
+        }
       }
-      setLoading(false); // Akhiri loading setelah fetch user
+      setLoading(false);
     };
 
     fetchUser();
-  }, [onClose]);
+  }, [onClose]); // Tambahkan onClose ke dependency array
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true); // Mulai loading saat submit
+    setLoading(true);
 
     if (!userId) {
       alert("Gagal mendapatkan ID pengguna. Silakan tunggu atau coba refresh halaman.");
@@ -94,7 +96,6 @@ export default function Pemasukan({ onClose }) {
     }
 
     try {
-      // Menggabungkan tanggal dari input dengan waktu saat ini
       const inputDate = new Date(tanggal);
       const now = new Date();
       inputDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
@@ -114,16 +115,18 @@ export default function Pemasukan({ onClose }) {
         alert("Gagal menyimpan pemasukan: " + error.message);
       } else {
         alert("Pemasukan berhasil ditambahkan!");
-        onClose(); // Tutup modal dan picu refresh di Dashboard
+        if (onClose && typeof onClose === 'function') { // Pastikan onClose adalah fungsi
+          onClose(); // Tutup modal dan picu refresh di Dashboard
+        }
       }
     } catch (err) {
       alert("Terjadi kesalahan: " + err.message);
     } finally {
-      setLoading(false); // Akhiri loading
+      setLoading(false);
     }
   };
 
-  if (loading && !userId) { // Tampilkan spinner awal jika userId belum didapatkan
+  if (loading && !userId) {
     return (
       <div className="flex items-center justify-center p-8">
         <FaSpinner className="animate-spin text-4xl mr-3 text-green-500" />
@@ -151,7 +154,6 @@ export default function Pemasukan({ onClose }) {
               <span className="text-sm">{kategori.nama}</span>
             </button>
           ))}
-
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4 mt-6">
@@ -214,7 +216,7 @@ export default function Pemasukan({ onClose }) {
 
           <button
             type="submit"
-            disabled={loading || !kategoriDipilih || !jumlah || !deskripsi || !tanggal} // Disable jika data belum lengkap
+            disabled={loading || !kategoriDipilih || !jumlah || !deskripsi || !tanggal}
             className={`w-full flex items-center justify-center font-semibold py-2 rounded-md transition ${
               loading || !kategoriDipilih || !jumlah || !deskripsi || !tanggal
                 ? "bg-green-300 cursor-not-allowed text-white"

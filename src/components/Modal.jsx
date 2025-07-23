@@ -1,6 +1,6 @@
 // src/components/Modal.jsx
 import React, { useEffect } from 'react';
-import './Modal.css'; // Akan kita buat di langkah selanjutnya
+import '../assets/Modal.css'; // Akan kita buat di langkah selanjutnya
 
 const Modal = ({ show, onClose, children, title }) => {
     // Jika 'show' adalah false, jangan render modal sama sekali
