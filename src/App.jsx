@@ -14,7 +14,7 @@ const Forgot = React.lazy(() => import("./pages/auth/Forgot"));
 const Dashboard = React.lazy(() => import("./pages/Dashbord")); // PASTIKAN PATH INI BENAR: './pages/Dashboard' BUKAN './pages/Dashbord'
 const Laporan = React.lazy(() => import("./pages/Laporan"));
 const Total = React.lazy(() => import("./pages/Total"));
-const About = React.lazy(() => import("./pages/Guest/About"));
+const About = React.lazy(() => import("./pages/Guest/about"));
 const OurTim = React.lazy(() => import("./pages/guest/OurTim"));
 const FAQpage = React.lazy(() => import("./pages/guest/FAQpage"));
 const Contact = React.lazy(() => import("./pages/guest/Contact"));
