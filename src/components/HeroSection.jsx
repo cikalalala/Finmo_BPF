@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import About from "../pages/Guest/About";
+import About from "../pages/guest/about";
 import OurTeam from "../pages/guest/OurTim";
 import FAQpage from "../pages/guest/FAQpage";
 import Contact from "../pages/guest/Contact";
